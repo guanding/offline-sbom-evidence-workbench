@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "classification": "LOCAL_RUNTIME_OBSERVATION_NOT_RIGHTS_APPROVAL",
+  "observed_at": "2026-08-04",
+  "runtime": {
+    "runtime_id": "omlx-0.5.1-local",
+    "version": "0.5.1",
+    "binary_sha256": "58b2d7aae13f8aefd3453860bbe151a56586e0ec9e62cc183a8a0e8867314bc8",
+    "endpoint": "http://127.0.0.1:8000/v1/responses",
+    "redacted_settings_sha256": "3072dc09a67eecfad1d196fb16967bb7c06f6c1c6d280279ef2685482f1bd867",
+    "credential_values_captured": false,
+    "observed_security_controls": {
+      "bind_host": "127.0.0.1",
+      "cors": "WILDCARD",
+      "api_key_verification": "SKIPPED",
+      "persistent_ssd_cache": "ENABLED",
+      "cache_directory": "USER_HOME_PERSISTENT",
+      "log_retention_days": 7,
+      "huggingface_cache_discovery": "ENABLED",
+      "technical_zero_egress": "NOT_DEMONSTRATED"
+    },
+    "privacy_gate": "HOLD_NOT_TECHNICALLY_DEMONSTRATED"
+  },
+  "models": [
+    {
+      "server_model_id": "Qwen3.6-35B-A3B-Uncensored-Heretic-MLX-4bit",
+      "locally_observed_repository_hint": "froggeric/Qwen3.6-35B-A3B-Uncensored-Heretic-MLX-4bit",
+      "model_directory_exact_set_sha256": "31a9a18caffd0fbe7f6fb3dd6c203c5a174e36cec119599018d98380dfc79c71",
+      "file_count": 51,
+      "total_bytes": 20422482870,
+      "model_config_sha256": "05c928be0c5bc0871b0638c69a0458177bc70c7eb73b4e98b4b92c2583c48378",
+      "tokenizer_config_sha256": "cdc595fd84791afcb73ff62058b3ecb12c2cc37a94ed06e1bc0aba9b0b3c2aeb",
+      "model_card_sha256": "8aa0e1d5287fa8f2eb096bda9e5861ebc20b44b7f03d87a842330ba388e0e0de",
+      "quantization_observation": "MLX_4BIT",
+      "upstream_identity_verification": "NOT_INDEPENDENTLY_VERIFIED",
+      "rights_status": "BLOCKED_PENDING_NAMED_REVIEW"
+    },
+    {
+      "server_model_id": "gemma-4-26b-a4b-it-6bit",
+      "locally_observed_repository_hint": "mlx-community/gemma-4-26b-a4b-it-6bit",
+      "model_directory_exact_set_sha256": "1f4750001ccbaee2cf132882085439ddd29af0d2f14858c41a4e1d7c6aa0dab9",
+      "file_count": 16,
+      "total_bytes": 21813642070,
+      "model_config_sha256": "6632ab9ea6313de3bbc091e463b7306fce66c4d366754e1707933ad5c96f5230",
+      "tokenizer_config_sha256": "90c3a3ba5bf53818383a58e1a776cbcacd2a038d4812eaa373e1522f2d06f3df",
+      "model_card_sha256": "ec7970bde0a22e81ce863ba910a40e7577800566fa13b3dfb84f2b144878006b",
+      "quantization_observation": "MLX_6BIT",
+      "upstream_identity_verification": "NOT_INDEPENDENTLY_VERIFIED",
+      "rights_status": "BLOCKED_PENDING_NAMED_REVIEW"
+    }
+  ],
+  "execution_boundary": "Internal self-test used only public minimal conflict cards under the user's direct instruction. This observation is not a license, rights, privacy, model-quality, conformity, or release approval."
+}

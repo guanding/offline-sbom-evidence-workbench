@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/sbom-workbench/synthetic-candidate.schema.json",
+  "title": "Orion Synthetic SBOM Candidate",
+  "x-classification": "SYNTHETIC_NOT_EVIDENCE",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "classification",
+    "candidate_id",
+    "release_id",
+    "producer",
+    "name",
+    "version",
+    "identifiers",
+    "artifact_sha256",
+    "technical_status",
+    "product_conformity_status",
+    "manufacturer_release_authority",
+    "cab_conclusion",
+    "components",
+    "relationships",
+    "reconciliation"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "classification": {"const": "SYNTHETIC_NOT_EVIDENCE"},
+    "candidate_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"},
+    "release_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"},
+    "producer": {"type": "string", "minLength": 1},
+    "name": {"type": "string", "minLength": 1},
+    "version": {"type": "string", "minLength": 1},
+    "identifiers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/identifier"},
+      "contains": {
+        "type": "object",
+        "properties": {"type": {"const": "COMPONENT_ROLE"}, "value": {"const": "ROOT_PRODUCT"}},
+        "required": ["type", "value"]
+      }
+    },
+    "artifact_sha256": {"$ref": "#/$defs/sha256"},
+    "technical_status": {"enum": ["SYNTHETIC_RECONCILED", "SYNTHETIC_RECONCILIATION_OPEN"]},
+    "product_conformity_status": {"const": "NO_PRODUCT_CONFORMITY_STATUS"},
+    "manufacturer_release_authority": {"const": false},
+    "cab_conclusion": {"const": false},
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/candidateComponent"}
+    },
+    "relationships": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/relationship"}
+    },
+    "reconciliation": {"$ref": "#/$defs/reconciliation"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"technical_status": {"const": "SYNTHETIC_RECONCILED"}}},
+      "then": {
+        "properties": {
+          "reconciliation": {
+            "properties": {
+              "status": {"const": "SYNTHETIC_RECONCILED"},
+              "component_population_status": {"const": "SYNTHETIC_CLOSED_SET_FOR_FIXTURE"},
+              "conflicts": {"maxItems": 0},
+              "unknowns": {"maxItems": 0}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"technical_status": {"const": "SYNTHETIC_RECONCILIATION_OPEN"}}},
+      "then": {
+        "properties": {
+          "reconciliation": {
+            "properties": {
+              "status": {"const": "SYNTHETIC_RECONCILIATION_OPEN"},
+              "component_population_status": {"const": "SYNTHETIC_OPEN_SET"},
+              "conflicts": {"minItems": 1},
+              "unknowns": {"minItems": 1}
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "textOrNull": {"oneOf": [{"type": "string", "minLength": 1}, {"type": "null"}]},
+    "identifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "value", "algorithm"],
+      "properties": {
+        "type": {"enum": ["SYNTHETIC_URN", "PURL", "COMPONENT_ROLE", "PROVENANCE", "OBSERVED_HASH", "SUPPLIER_HASH"]},
+        "value": {"type": "string", "minLength": 1},
+        "algorithm": {"oneOf": [{"const": "SHA-256"}, {"type": "null"}]}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"type": {"const": "OBSERVED_HASH"}}},
+          "then": {
+            "properties": {
+              "algorithm": {"const": "SHA-256"},
+              "value": {"$ref": "#/$defs/sha256"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"type": {"const": "SUPPLIER_HASH"}}},
+          "then": {"properties": {"value": {"$ref": "#/$defs/sha256"}}}
+        },
+        {
+          "if": {"properties": {"type": {"enum": ["SYNTHETIC_URN", "PURL", "COMPONENT_ROLE", "PROVENANCE"]}}},
+          "then": {"properties": {"algorithm": {"type": "null"}}}
+        }
+      ]
+    },
+    "candidateComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate_id", "producer", "name", "version", "identifiers"],
+      "properties": {
+        "candidate_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"},
+        "producer": {"$ref": "#/$defs/textOrNull"},
+        "name": {"$ref": "#/$defs/textOrNull"},
+        "version": {"$ref": "#/$defs/textOrNull"},
+        "identifiers": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/identifier"}}
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "type", "to"],
+      "properties": {
+        "from": {"type": "string", "minLength": 1},
+        "type": {"enum": ["CONTAINS", "DEPENDS_ON", "GENERATED_FROM"]},
+        "to": {"type": "string", "minLength": 1}
+      }
+    },
+    "conflict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate_id", "field", "build_value", "artifact_value", "resolution"],
+      "properties": {
+        "candidate_id": {"type": "string", "minLength": 1},
+        "field": {"type": "string", "minLength": 1},
+        "build_value": {"type": "string", "minLength": 1},
+        "artifact_value": {"type": "string", "minLength": 1},
+        "resolution": {"type": "null"}
+      }
+    },
+    "unknown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate_id", "field", "reason"],
+      "properties": {
+        "candidate_id": {"type": "string", "minLength": 1},
+        "field": {"type": "string", "minLength": 1},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "reconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "component_population_status", "conflicts", "unknowns", "limitations", "evidence_inputs"],
+      "properties": {
+        "status": {"enum": ["SYNTHETIC_RECONCILED", "SYNTHETIC_RECONCILIATION_OPEN"]},
+        "component_population_status": {"enum": ["SYNTHETIC_CLOSED_SET_FOR_FIXTURE", "SYNTHETIC_OPEN_SET"]},
+        "conflicts": {"type": "array", "items": {"$ref": "#/$defs/conflict"}},
+        "unknowns": {"type": "array", "items": {"$ref": "#/$defs/unknown"}},
+        "limitations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "evidence_inputs": {"type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    }
+  }
+}

@@ -1,0 +1,390 @@
+{
+  "registry_type": "model-runtime-intake",
+  "schema_version": "1.0",
+  "updated_at": "2026-08-02",
+  "default_policy": {
+    "unknown_values": "BLOCK",
+    "exact_model_identity_required_before_execution": true,
+    "artifact_hashes_required_before_execution": true,
+    "hashed_license_evidence_required_before_authorization": true,
+    "named_human_review_required_before_authorization": true,
+    "scope_permissions_are_independent": true,
+    "model_has_release_authority": false
+  },
+  "models": [
+    {
+      "intake_id": "qwen-local-pending",
+      "family_hint": "Qwen",
+      "intake_status": "BLOCKED_PENDING_EXACT_MODEL_ID",
+      "identity": {
+        "publisher_legal_name": null,
+        "registry_namespace": null,
+        "exact_model_id": null,
+        "source_url": null,
+        "revision_type": null,
+        "revision_label": null,
+        "resolved_revision": null,
+        "model_config_sha256": null,
+        "tokenizer_exact_set_sha256": null,
+        "model_card_sha256": null
+      },
+      "weights": {
+        "inventory_status": "NOT_INVENTORIED",
+        "format": null,
+        "precision": null,
+        "exact_set_sha256": null,
+        "files": []
+      },
+      "quantization": {
+        "status": "NOT_ASSESSED",
+        "scheme": null,
+        "bits": null,
+        "group_size": null,
+        "quantizer_name": null,
+        "quantizer_version": null,
+        "config_sha256": null,
+        "artifact_exact_set_sha256": null
+      },
+      "adapter": {
+        "status": "NOT_ASSESSED",
+        "adapter_id": null,
+        "source_url": null,
+        "resolved_revision": null,
+        "exact_set_sha256": null,
+        "license_expression": null,
+        "license_text_sha256": null,
+        "base_model_binding_sha256": null,
+        "merged_into_weights": null
+      },
+      "runtime_binding": {
+        "runtime_id": "omlx-0.5.1-local",
+        "registry_relative_path": "datasets/runtime_registry.json",
+        "deployment_mode": "NOT_ASSESSED",
+        "runtime_config_sha256": null,
+        "model_load_profile_sha256": null,
+        "local_inventory_evidence_sha256": null,
+        "hosted_provider": null,
+        "hosted_endpoint_identifier": null,
+        "hosted_terms_sha256": null,
+        "network_mode": "NOT_ASSESSED",
+        "cache_policy_status": "NOT_ASSESSED"
+      },
+      "rights_decision": {
+        "schema_version": "1.0",
+        "decision_id": "qwen-rights-pending-exact-id",
+        "subject": {
+          "subject_type": "MODEL_RUNTIME",
+          "intake_id": "qwen-local-pending",
+          "family_hint": "Qwen",
+          "exact_model_id": null,
+          "resolved_revision": null,
+          "weights_exact_set_sha256": null,
+          "quantization_config_sha256": null,
+          "adapter_exact_set_sha256": null
+        },
+        "decision_status": "BLOCKED_PENDING_EXACT_MODEL_ID",
+        "applicable_legal_entity": {
+          "legal_name": null,
+          "registration_identifier": null,
+          "jurisdiction": null,
+          "decision_capacity": null
+        },
+        "named_reviewer": {
+          "full_name": null,
+          "role": null,
+          "organization": null,
+          "reviewer_identifier": null,
+          "independence_statement": null
+        },
+        "decided_at": null,
+        "rights_basis": {
+          "license_expression": null,
+          "license_source_url": null,
+          "license_text_sha256": null,
+          "model_terms_url": null,
+          "model_terms_sha256": null,
+          "acceptable_use_policy_url": null,
+          "acceptable_use_policy_sha256": null,
+          "tdm_reservation_status": "NOT_ASSESSED"
+        },
+        "permissions": {
+          "local_execution": "NOT_AUTHORIZED",
+          "hosted_service": "NOT_AUTHORIZED",
+          "internal_evaluation": "NOT_AUTHORIZED",
+          "training_or_finetuning": "NOT_AUTHORIZED",
+          "create_derivative_model": "NOT_AUTHORIZED",
+          "distribute_derivative_model": "NOT_AUTHORIZED",
+          "redistribute_original_weights": "NOT_AUTHORIZED",
+          "redistribute_quantized_weights": "NOT_AUTHORIZED",
+          "distribute_adapter": "NOT_AUTHORIZED",
+          "distribute_merged_weights": "NOT_AUTHORIZED"
+        },
+        "evidence": [],
+        "review_triggers": [
+          {
+            "trigger_id": "qwen-exact-id",
+            "trigger_type": "EXACT_MODEL_ID_CHANGED",
+            "condition": "精确模型仓库 ID 首次登记或发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "qwen-revision",
+            "trigger_type": "REVISION_CHANGED",
+            "condition": "revision、tag、commit 或内容 digest 首次冻结或发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "qwen-weights",
+            "trigger_type": "WEIGHTS_CHANGED",
+            "condition": "权重 exact-set 首次冻结或任一文件、路径、大小、哈希发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "qwen-quantization",
+            "trigger_type": "QUANTIZATION_CHANGED",
+            "condition": "量化算法、参数、工具、配置或量化制品发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "qwen-adapter",
+            "trigger_type": "ADAPTER_CHANGED",
+            "condition": "adapter 状态、身份、基座绑定、许可或制品发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "qwen-license-terms",
+            "trigger_type": "LICENSE_OR_TERMS_CHANGED",
+            "condition": "许可证、模型条款、可接受使用政策或权利保留首次冻结或发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "qwen-deployment",
+            "trigger_type": "DEPLOYMENT_MODE_CHANGED",
+            "condition": "本地、托管或混合部署范围发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "qwen-legal-entity",
+            "trigger_type": "LEGAL_ENTITY_CHANGED",
+            "condition": "适用法律实体、司法辖区或接受条款的身份发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "qwen-distribution",
+            "trigger_type": "DISTRIBUTION_INTENT_CHANGED",
+            "condition": "原始权重、量化权重、adapter、合并权重或衍生模型的分发意图发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          }
+        ],
+        "next_review_at": null,
+        "notes": "当前只有 Qwen 家族提示，不构成精确模型身份；尚无权利批准。"
+      },
+      "blocked_reasons": [
+        "精确模型仓库 ID 与来源 URL 未登记。",
+        "revision、权重 exact-set、量化身份和 adapter 状态未冻结。",
+        "完整许可证文本及适用条款哈希未知。",
+        "适用法律实体、具名审核人、决定时间和证据尚未登记。"
+      ],
+      "revalidation_triggers": [
+        "EXACT_MODEL_ID_PROVIDED_OR_CHANGED",
+        "REVISION_PROVIDED_OR_CHANGED",
+        "WEIGHT_MANIFEST_FROZEN_OR_CHANGED",
+        "QUANTIZATION_IDENTITY_FROZEN_OR_CHANGED",
+        "ADAPTER_IDENTITY_FROZEN_OR_CHANGED",
+        "LICENSE_OR_TERMS_EVIDENCE_FROZEN_OR_CHANGED",
+        "RUNTIME_BINDING_CHANGED",
+        "DEPLOYMENT_SCOPE_CHANGED",
+        "LEGAL_ENTITY_CHANGED",
+        "NAMED_REVIEW_DECISION_RECORDED_OR_CHANGED"
+      ],
+      "notes": "用户确认本地存在 Qwen，但未提供可验证的精确型号；不得从家族名、目录名或模型常识补全。"
+    },
+    {
+      "intake_id": "gemma-local-pending",
+      "family_hint": "Gemma",
+      "intake_status": "BLOCKED_PENDING_EXACT_MODEL_ID",
+      "identity": {
+        "publisher_legal_name": null,
+        "registry_namespace": null,
+        "exact_model_id": null,
+        "source_url": null,
+        "revision_type": null,
+        "revision_label": null,
+        "resolved_revision": null,
+        "model_config_sha256": null,
+        "tokenizer_exact_set_sha256": null,
+        "model_card_sha256": null
+      },
+      "weights": {
+        "inventory_status": "NOT_INVENTORIED",
+        "format": null,
+        "precision": null,
+        "exact_set_sha256": null,
+        "files": []
+      },
+      "quantization": {
+        "status": "NOT_ASSESSED",
+        "scheme": null,
+        "bits": null,
+        "group_size": null,
+        "quantizer_name": null,
+        "quantizer_version": null,
+        "config_sha256": null,
+        "artifact_exact_set_sha256": null
+      },
+      "adapter": {
+        "status": "NOT_ASSESSED",
+        "adapter_id": null,
+        "source_url": null,
+        "resolved_revision": null,
+        "exact_set_sha256": null,
+        "license_expression": null,
+        "license_text_sha256": null,
+        "base_model_binding_sha256": null,
+        "merged_into_weights": null
+      },
+      "runtime_binding": {
+        "runtime_id": "omlx-0.5.1-local",
+        "registry_relative_path": "datasets/runtime_registry.json",
+        "deployment_mode": "NOT_ASSESSED",
+        "runtime_config_sha256": null,
+        "model_load_profile_sha256": null,
+        "local_inventory_evidence_sha256": null,
+        "hosted_provider": null,
+        "hosted_endpoint_identifier": null,
+        "hosted_terms_sha256": null,
+        "network_mode": "NOT_ASSESSED",
+        "cache_policy_status": "NOT_ASSESSED"
+      },
+      "rights_decision": {
+        "schema_version": "1.0",
+        "decision_id": "gemma-rights-pending-exact-id",
+        "subject": {
+          "subject_type": "MODEL_RUNTIME",
+          "intake_id": "gemma-local-pending",
+          "family_hint": "Gemma",
+          "exact_model_id": null,
+          "resolved_revision": null,
+          "weights_exact_set_sha256": null,
+          "quantization_config_sha256": null,
+          "adapter_exact_set_sha256": null
+        },
+        "decision_status": "BLOCKED_PENDING_EXACT_MODEL_ID",
+        "applicable_legal_entity": {
+          "legal_name": null,
+          "registration_identifier": null,
+          "jurisdiction": null,
+          "decision_capacity": null
+        },
+        "named_reviewer": {
+          "full_name": null,
+          "role": null,
+          "organization": null,
+          "reviewer_identifier": null,
+          "independence_statement": null
+        },
+        "decided_at": null,
+        "rights_basis": {
+          "license_expression": null,
+          "license_source_url": null,
+          "license_text_sha256": null,
+          "model_terms_url": null,
+          "model_terms_sha256": null,
+          "acceptable_use_policy_url": null,
+          "acceptable_use_policy_sha256": null,
+          "tdm_reservation_status": "NOT_ASSESSED"
+        },
+        "permissions": {
+          "local_execution": "NOT_AUTHORIZED",
+          "hosted_service": "NOT_AUTHORIZED",
+          "internal_evaluation": "NOT_AUTHORIZED",
+          "training_or_finetuning": "NOT_AUTHORIZED",
+          "create_derivative_model": "NOT_AUTHORIZED",
+          "distribute_derivative_model": "NOT_AUTHORIZED",
+          "redistribute_original_weights": "NOT_AUTHORIZED",
+          "redistribute_quantized_weights": "NOT_AUTHORIZED",
+          "distribute_adapter": "NOT_AUTHORIZED",
+          "distribute_merged_weights": "NOT_AUTHORIZED"
+        },
+        "evidence": [],
+        "review_triggers": [
+          {
+            "trigger_id": "gemma-exact-id",
+            "trigger_type": "EXACT_MODEL_ID_CHANGED",
+            "condition": "精确模型仓库 ID 首次登记或发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "gemma-revision",
+            "trigger_type": "REVISION_CHANGED",
+            "condition": "revision、tag、commit 或内容 digest 首次冻结或发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "gemma-weights",
+            "trigger_type": "WEIGHTS_CHANGED",
+            "condition": "权重 exact-set 首次冻结或任一文件、路径、大小、哈希发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "gemma-quantization",
+            "trigger_type": "QUANTIZATION_CHANGED",
+            "condition": "量化算法、参数、工具、配置或量化制品发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "gemma-adapter",
+            "trigger_type": "ADAPTER_CHANGED",
+            "condition": "adapter 状态、身份、基座绑定、许可或制品发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "gemma-license-terms",
+            "trigger_type": "LICENSE_OR_TERMS_CHANGED",
+            "condition": "许可证、模型条款、可接受使用政策或权利保留首次冻结或发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "gemma-deployment",
+            "trigger_type": "DEPLOYMENT_MODE_CHANGED",
+            "condition": "本地、托管或混合部署范围发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "gemma-legal-entity",
+            "trigger_type": "LEGAL_ENTITY_CHANGED",
+            "condition": "适用法律实体、司法辖区或接受条款的身份发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          },
+          {
+            "trigger_id": "gemma-distribution",
+            "trigger_type": "DISTRIBUTION_INTENT_CHANGED",
+            "condition": "原始权重、量化权重、adapter、合并权重或衍生模型的分发意图发生变化。",
+            "required_action": "BLOCK_AND_REVIEW"
+          }
+        ],
+        "next_review_at": null,
+        "notes": "当前只有 Gemma 家族提示，不构成精确模型身份；尚无权利批准。"
+      },
+      "blocked_reasons": [
+        "精确模型仓库 ID 与来源 URL 未登记。",
+        "revision、权重 exact-set、量化身份和 adapter 状态未冻结。",
+        "完整许可证文本及适用条款哈希未知。",
+        "适用法律实体、具名审核人、决定时间和证据尚未登记。"
+      ],
+      "revalidation_triggers": [
+        "EXACT_MODEL_ID_PROVIDED_OR_CHANGED",
+        "REVISION_PROVIDED_OR_CHANGED",
+        "WEIGHT_MANIFEST_FROZEN_OR_CHANGED",
+        "QUANTIZATION_IDENTITY_FROZEN_OR_CHANGED",
+        "ADAPTER_IDENTITY_FROZEN_OR_CHANGED",
+        "LICENSE_OR_TERMS_EVIDENCE_FROZEN_OR_CHANGED",
+        "RUNTIME_BINDING_CHANGED",
+        "DEPLOYMENT_SCOPE_CHANGED",
+        "LEGAL_ENTITY_CHANGED",
+        "NAMED_REVIEW_DECISION_RECORDED_OR_CHANGED"
+      ],
+      "notes": "用户确认本地存在 Gemma，但未提供可验证的精确型号；不得从家族名、目录名或模型常识补全。"
+    }
+  ]
+}

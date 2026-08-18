@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "classification": "SYNTHETIC_NOT_EVIDENCE",
+  "release_id": "orion-conflict",
+  "manufacturer": "Orion Synthetic Devices",
+  "product": "Orion Edge Controller",
+  "product_version": "7.4.0-conflict-synthetic",
+  "build_id": "orion-build-conflict",
+  "architecture": "arm64-synthetic",
+  "hardware_revision": "orion-hw-r1",
+  "artifact_relative_path": "artifacts/orion-bundle.tar",
+  "artifact_sha256": "7dd09b8e8d138a40ec7b8a8e3a1664cb17915ec41de50af16a84657d2c83d47e",
+  "inputs": {
+    "build_manifest": {
+      "relative_path": "evidence/build-manifest.json",
+      "sha256": "f118bb980ad0594477d64c1f7d284cea27e7dbd87ea61b579b4071959df6d08f"
+    },
+    "artifact_inventory": {
+      "relative_path": "evidence/artifact-inventory.json",
+      "sha256": "adc69bf3c2c44f3cbaa4f16e6983da8c155b5a3a382dfa316f1ff11ffcd99eae"
+    }
+  },
+  "release_timestamp": "2026-08-02T03:00:00Z",
+  "sbom_author": "Orion Synthetic Fixture Builder",
+  "sbom_version": "conflict-1",
+  "evidence_cutoff": "2026-08-02T02:59:00Z"
+}

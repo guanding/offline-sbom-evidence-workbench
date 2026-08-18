@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose an enhancement without including controlled evidence.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the user problem and evidence boundary.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed outcome
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: boundary
+    attributes:
+      label: Scope acknowledgment
+      options:
+        - label: This request does not treat tool output as certification, conformity, or customer evidence.
+          required: true
+

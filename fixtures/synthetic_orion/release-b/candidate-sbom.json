@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "classification": "SYNTHETIC_NOT_EVIDENCE",
+  "candidate_id": "orion-release-b-sbom-candidate",
+  "release_id": "orion-release-b",
+  "producer": "Orion Synthetic Devices",
+  "name": "Orion Edge Controller",
+  "version": "7.4.1-synthetic",
+  "identifiers": [
+    {"type": "SYNTHETIC_URN", "value": "urn:synthetic:orion:edge-controller:7.4.1", "algorithm": null},
+    {"type": "COMPONENT_ROLE", "value": "ROOT_PRODUCT", "algorithm": null}
+  ],
+  "artifact_sha256": "097fc4ded3f24ce2ac5ab1f665285b907d646452c166123347661a36bd2e4e8b",
+  "technical_status": "SYNTHETIC_RECONCILED",
+  "product_conformity_status": "NO_PRODUCT_CONFORMITY_STATUS",
+  "manufacturer_release_authority": false,
+  "cab_conclusion": false,
+  "components": [
+    {"candidate_id": "orion-app", "producer": "Orion Synthetic Devices", "name": "Orion Application", "version": "2.4.0", "identifiers": [{"type": "PURL", "value": "pkg:generic/orion-synthetic/orion-app@2.4.0", "algorithm": null}, {"type": "COMPONENT_ROLE", "value": "TOP_LEVEL", "algorithm": null}, {"type": "PROVENANCE", "value": "SYNTHETIC_BUILD_RECORD:build/app", "algorithm": null}, {"type": "OBSERVED_HASH", "value": "17b494fa12de446601c1400ae4b027822760ff30264c616077f6adea8f66f3a7", "algorithm": "SHA-256"}]},
+    {"candidate_id": "orion-crypto", "producer": "Orion Synthetic Devices", "name": "Orion Crypto", "version": "1.1.0", "identifiers": [{"type": "PURL", "value": "pkg:generic/orion-synthetic/orion-crypto@1.1.0", "algorithm": null}, {"type": "COMPONENT_ROLE", "value": "TRANSITIVE", "algorithm": null}, {"type": "PROVENANCE", "value": "SYNTHETIC_BUILD_RECORD:build/crypto", "algorithm": null}, {"type": "OBSERVED_HASH", "value": "fa2a7662365b95e23998623894afdd0a4937523a3bb0d5b0423584f6c4fa93a9", "algorithm": "SHA-256"}]},
+    {"candidate_id": "orion-radio-fw", "producer": "Orion Synthetic Devices", "name": "Orion Radio Firmware", "version": "3.2.1", "identifiers": [{"type": "PURL", "value": "pkg:generic/orion-synthetic/orion-radio-fw@3.2.1", "algorithm": null}, {"type": "COMPONENT_ROLE", "value": "BINARY_ONLY_FIRMWARE", "algorithm": null}, {"type": "PROVENANCE", "value": "SYNTHETIC_BINARY_ARTIFACT:artifact/radio-fw", "algorithm": null}, {"type": "OBSERVED_HASH", "value": "21f33567a1bc4e6a1bb55b470549bd9816b7560e2de53b5d8f1a975982f63dba", "algorithm": "SHA-256"}, {"type": "SUPPLIER_HASH", "value": "11f69f92b87c761a82142f7a10ac54ebcc7054519fdc7593e6488003f27ee916", "algorithm": "SHA-256"}]},
+    {"candidate_id": "orion-transport-source", "producer": "Orion Synthetic Devices", "name": "Orion Transport", "version": "1.0.0", "identifiers": [{"type": "PURL", "value": "pkg:generic/orion-synthetic/orion-transport@1.0.0", "algorithm": null}, {"type": "COMPONENT_ROLE", "value": "TRANSITIVE", "algorithm": null}, {"type": "PROVENANCE", "value": "SYNTHETIC_BUILD_RECORD:build/transport/source-slot", "algorithm": null}, {"type": "OBSERVED_HASH", "value": "bfeb244f9f16705a3c4ea954cd234d823825350b41fc85f9e98bf5490e867497", "algorithm": "SHA-256"}]},
+    {"candidate_id": "orion-transport-binary", "producer": "Orion Synthetic Devices", "name": "Orion Transport", "version": "1.0.0", "identifiers": [{"type": "PURL", "value": "pkg:generic/orion-synthetic/orion-transport@1.0.0", "algorithm": null}, {"type": "COMPONENT_ROLE", "value": "TRANSITIVE", "algorithm": null}, {"type": "PROVENANCE", "value": "SYNTHETIC_BINARY_ARTIFACT:artifact/transport/binary-slot", "algorithm": null}, {"type": "OBSERVED_HASH", "value": "5d27da72f376678a16c39a805c3e2e45fe4db97e8fbb82c4885b7eb788df42ed", "algorithm": "SHA-256"}]},
+    {"candidate_id": "orion-telemetry", "producer": "Orion Synthetic Devices", "name": "Orion Telemetry", "version": "0.9.0", "identifiers": [{"type": "PURL", "value": "pkg:generic/orion-synthetic/orion-telemetry@0.9.0", "algorithm": null}, {"type": "COMPONENT_ROLE", "value": "TOP_LEVEL", "algorithm": null}, {"type": "PROVENANCE", "value": "SYNTHETIC_BUILD_RECORD:build/telemetry", "algorithm": null}, {"type": "OBSERVED_HASH", "value": "f1e2df9361bbd0d238954cae61d5a7b4e6920f827a2f0028dd7c82842d541fa4", "algorithm": "SHA-256"}, {"type": "SUPPLIER_HASH", "value": "390e93e12b164f5306c5dfc6109c5e2719e8a5f710b29bf570048b7c45ef6990", "algorithm": null}]}
+  ],
+  "relationships": [
+    {"from": "orion-root", "type": "CONTAINS", "to": "orion-app"},
+    {"from": "orion-app", "type": "GENERATED_FROM", "to": "orion-crypto"},
+    {"from": "orion-root", "type": "CONTAINS", "to": "orion-radio-fw"},
+    {"from": "orion-app", "type": "DEPENDS_ON", "to": "orion-transport-source"},
+    {"from": "orion-app", "type": "DEPENDS_ON", "to": "orion-transport-binary"},
+    {"from": "orion-root", "type": "CONTAINS", "to": "orion-telemetry"}
+  ],
+  "reconciliation": {
+    "status": "SYNTHETIC_RECONCILED",
+    "component_population_status": "SYNTHETIC_CLOSED_SET_FOR_FIXTURE",
+    "conflicts": [],
+    "unknowns": [],
+    "limitations": ["Supplier hash for orion-telemetry has no supplier-declared algorithm; no algorithm was inferred."],
+    "evidence_inputs": ["orion-release-b-build-manifest", "orion-release-b-artifact-inventory"]
+  }
+}

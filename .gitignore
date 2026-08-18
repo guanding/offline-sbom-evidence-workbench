@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.venv/
+.ci-tools/
+.cache/
+dist/
+build/
+*.egg-info/
+.DS_Store
+runtime/
+evidence/manual-render/rev*/
+.serena/
+/data/

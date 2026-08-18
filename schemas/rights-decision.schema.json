@@ -1,0 +1,620 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/sbom-workbench/rights-decision.schema.json",
+  "title": "SBOM Workbench Model Rights Decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "decision_id",
+    "subject",
+    "decision_status",
+    "applicable_legal_entity",
+    "named_reviewer",
+    "decided_at",
+    "rights_basis",
+    "permissions",
+    "evidence",
+    "review_triggers",
+    "next_review_at",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "decision_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"
+    },
+    "subject": {"$ref": "#/$defs/subject"},
+    "decision_status": {
+      "enum": [
+        "BLOCKED_PENDING_EXACT_MODEL_ID",
+        "BLOCKED_PENDING_ARTIFACT_HASHES",
+        "BLOCKED_PENDING_LICENSE_EVIDENCE",
+        "BLOCKED_PENDING_NAMED_REVIEW",
+        "DENIED",
+        "APPROVED_LIMITED",
+        "APPROVED"
+      ]
+    },
+    "applicable_legal_entity": {"$ref": "#/$defs/legalEntity"},
+    "named_reviewer": {"$ref": "#/$defs/reviewer"},
+    "decided_at": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "format": "date-time"}
+      ]
+    },
+    "rights_basis": {"$ref": "#/$defs/rightsBasis"},
+    "permissions": {"$ref": "#/$defs/permissions"},
+    "evidence": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/evidence"}
+    },
+    "review_triggers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/reviewTrigger"}
+    },
+    "next_review_at": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "format": "date-time"}
+      ]
+    },
+    "notes": {"type": "string"}
+  },
+  "$defs": {
+    "sha256OrNull": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      ]
+    },
+    "uriOrNull": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "format": "uri", "pattern": "^https://"}
+      ]
+    },
+    "textOrNull": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "minLength": 1}
+      ]
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject_type",
+        "intake_id",
+        "family_hint",
+        "exact_model_id",
+        "resolved_revision",
+        "weights_exact_set_sha256",
+        "quantization_config_sha256",
+        "adapter_exact_set_sha256"
+      ],
+      "properties": {
+        "subject_type": {"const": "MODEL_RUNTIME"},
+        "intake_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"
+        },
+        "family_hint": {"type": "string", "minLength": 1},
+        "exact_model_id": {"$ref": "#/$defs/textOrNull"},
+        "resolved_revision": {"$ref": "#/$defs/textOrNull"},
+        "weights_exact_set_sha256": {"$ref": "#/$defs/sha256OrNull"},
+        "quantization_config_sha256": {"$ref": "#/$defs/sha256OrNull"},
+        "adapter_exact_set_sha256": {"$ref": "#/$defs/sha256OrNull"}
+      }
+    },
+    "legalEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "legal_name",
+        "registration_identifier",
+        "jurisdiction",
+        "decision_capacity"
+      ],
+      "properties": {
+        "legal_name": {"$ref": "#/$defs/textOrNull"},
+        "registration_identifier": {"$ref": "#/$defs/textOrNull"},
+        "jurisdiction": {"$ref": "#/$defs/textOrNull"},
+        "decision_capacity": {"$ref": "#/$defs/textOrNull"}
+      }
+    },
+    "reviewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "full_name",
+        "role",
+        "organization",
+        "reviewer_identifier",
+        "independence_statement"
+      ],
+      "properties": {
+        "full_name": {"$ref": "#/$defs/textOrNull"},
+        "role": {"$ref": "#/$defs/textOrNull"},
+        "organization": {"$ref": "#/$defs/textOrNull"},
+        "reviewer_identifier": {"$ref": "#/$defs/textOrNull"},
+        "independence_statement": {"$ref": "#/$defs/textOrNull"}
+      }
+    },
+    "rightsBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "license_expression",
+        "license_source_url",
+        "license_text_sha256",
+        "model_terms_url",
+        "model_terms_sha256",
+        "acceptable_use_policy_url",
+        "acceptable_use_policy_sha256",
+        "tdm_reservation_status"
+      ],
+      "properties": {
+        "license_expression": {"$ref": "#/$defs/textOrNull"},
+        "license_source_url": {"$ref": "#/$defs/uriOrNull"},
+        "license_text_sha256": {"$ref": "#/$defs/sha256OrNull"},
+        "model_terms_url": {"$ref": "#/$defs/uriOrNull"},
+        "model_terms_sha256": {"$ref": "#/$defs/sha256OrNull"},
+        "acceptable_use_policy_url": {"$ref": "#/$defs/uriOrNull"},
+        "acceptable_use_policy_sha256": {"$ref": "#/$defs/sha256OrNull"},
+        "tdm_reservation_status": {
+          "enum": [
+            "NOT_ASSESSED",
+            "NO_RESERVATION_OBSERVED",
+            "RESERVATION_OBSERVED",
+            "NOT_APPLICABLE"
+          ]
+        }
+      }
+    },
+    "permission": {
+      "enum": ["NOT_AUTHORIZED", "AUTHORIZED", "NOT_APPLICABLE"]
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "local_execution",
+        "hosted_service",
+        "internal_evaluation",
+        "training_or_finetuning",
+        "create_derivative_model",
+        "distribute_derivative_model",
+        "redistribute_original_weights",
+        "redistribute_quantized_weights",
+        "distribute_adapter",
+        "distribute_merged_weights"
+      ],
+      "properties": {
+        "local_execution": {"$ref": "#/$defs/permission"},
+        "hosted_service": {"$ref": "#/$defs/permission"},
+        "internal_evaluation": {"$ref": "#/$defs/permission"},
+        "training_or_finetuning": {"$ref": "#/$defs/permission"},
+        "create_derivative_model": {"$ref": "#/$defs/permission"},
+        "distribute_derivative_model": {"$ref": "#/$defs/permission"},
+        "redistribute_original_weights": {"$ref": "#/$defs/permission"},
+        "redistribute_quantized_weights": {"$ref": "#/$defs/permission"},
+        "distribute_adapter": {"$ref": "#/$defs/permission"},
+        "distribute_merged_weights": {"$ref": "#/$defs/permission"}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "evidence_type",
+        "source_url",
+        "relative_path",
+        "version_or_date",
+        "sha256",
+        "review_status",
+        "notes"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"
+        },
+        "evidence_type": {
+          "enum": [
+            "MODEL_CARD",
+            "LICENSE_TEXT",
+            "MODEL_TERMS",
+            "ACCEPTABLE_USE_POLICY",
+            "WEIGHT_MANIFEST",
+            "QUANTIZATION_MANIFEST",
+            "ADAPTER_MANIFEST",
+            "LOCAL_OBSERVATION",
+            "LEGAL_MEMO",
+            "OTHER"
+          ]
+        },
+        "source_url": {"$ref": "#/$defs/uriOrNull"},
+        "relative_path": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*(?:^|/)\\.(?:/|$))[^\\u0000]+$"
+            }
+          ]
+        },
+        "version_or_date": {"$ref": "#/$defs/textOrNull"},
+        "sha256": {"$ref": "#/$defs/sha256OrNull"},
+        "review_status": {"enum": ["PENDING", "FROZEN", "REVIEWED"]},
+        "notes": {"type": "string"}
+      }
+    },
+    "reviewTrigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trigger_id", "trigger_type", "condition", "required_action"],
+      "properties": {
+        "trigger_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"
+        },
+        "trigger_type": {
+          "enum": [
+            "EXACT_MODEL_ID_CHANGED",
+            "REVISION_CHANGED",
+            "WEIGHTS_CHANGED",
+            "QUANTIZATION_CHANGED",
+            "ADAPTER_CHANGED",
+            "LICENSE_OR_TERMS_CHANGED",
+            "DEPLOYMENT_MODE_CHANGED",
+            "LEGAL_ENTITY_CHANGED",
+            "DISTRIBUTION_INTENT_CHANGED",
+            "LAW_OR_REGULATION_CHANGED",
+            "SCHEDULED_REVIEW"
+          ]
+        },
+        "condition": {"type": "string", "minLength": 1},
+        "required_action": {"const": "BLOCK_AND_REVIEW"}
+      }
+    },
+    "blockedPermissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "local_execution",
+        "hosted_service",
+        "internal_evaluation",
+        "training_or_finetuning",
+        "create_derivative_model",
+        "distribute_derivative_model",
+        "redistribute_original_weights",
+        "redistribute_quantized_weights",
+        "distribute_adapter",
+        "distribute_merged_weights"
+      ],
+      "properties": {
+        "local_execution": {"const": "NOT_AUTHORIZED"},
+        "hosted_service": {"const": "NOT_AUTHORIZED"},
+        "internal_evaluation": {"const": "NOT_AUTHORIZED"},
+        "training_or_finetuning": {"const": "NOT_AUTHORIZED"},
+        "create_derivative_model": {"const": "NOT_AUTHORIZED"},
+        "distribute_derivative_model": {"const": "NOT_AUTHORIZED"},
+        "redistribute_original_weights": {"const": "NOT_AUTHORIZED"},
+        "redistribute_quantized_weights": {"const": "NOT_AUTHORIZED"},
+        "distribute_adapter": {"const": "NOT_AUTHORIZED"},
+        "distribute_merged_weights": {"const": "NOT_AUTHORIZED"}
+      }
+    },
+    "anyAuthorized": {
+      "anyOf": [
+        {"properties": {"local_execution": {"const": "AUTHORIZED"}}},
+        {"properties": {"hosted_service": {"const": "AUTHORIZED"}}},
+        {"properties": {"internal_evaluation": {"const": "AUTHORIZED"}}},
+        {"properties": {"training_or_finetuning": {"const": "AUTHORIZED"}}},
+        {"properties": {"create_derivative_model": {"const": "AUTHORIZED"}}},
+        {"properties": {"distribute_derivative_model": {"const": "AUTHORIZED"}}},
+        {"properties": {"redistribute_original_weights": {"const": "AUTHORIZED"}}},
+        {"properties": {"redistribute_quantized_weights": {"const": "AUTHORIZED"}}},
+        {"properties": {"distribute_adapter": {"const": "AUTHORIZED"}}},
+        {"properties": {"distribute_merged_weights": {"const": "AUTHORIZED"}}}
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "decision_status": {
+            "enum": [
+              "BLOCKED_PENDING_EXACT_MODEL_ID",
+              "BLOCKED_PENDING_ARTIFACT_HASHES",
+              "BLOCKED_PENDING_LICENSE_EVIDENCE",
+              "BLOCKED_PENDING_NAMED_REVIEW",
+              "DENIED"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "permissions": {"$ref": "#/$defs/blockedPermissions"}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision_status": {"const": "BLOCKED_PENDING_EXACT_MODEL_ID"}
+        }
+      },
+      "then": {
+        "properties": {
+          "subject": {
+            "properties": {
+              "exact_model_id": {"type": "null"},
+              "resolved_revision": {"type": "null"},
+              "weights_exact_set_sha256": {"type": "null"},
+              "quantization_config_sha256": {"type": "null"},
+              "adapter_exact_set_sha256": {"type": "null"}
+            }
+          },
+          "decided_at": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision_status": {"const": "BLOCKED_PENDING_ARTIFACT_HASHES"}
+        }
+      },
+      "then": {
+        "properties": {
+          "subject": {
+            "properties": {
+              "exact_model_id": {"type": "string", "minLength": 1},
+              "resolved_revision": {"type": "string", "minLength": 1}
+            }
+          },
+          "decided_at": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision_status": {"const": "BLOCKED_PENDING_LICENSE_EVIDENCE"}
+        }
+      },
+      "then": {
+        "properties": {
+          "subject": {
+            "properties": {
+              "exact_model_id": {"type": "string", "minLength": 1},
+              "resolved_revision": {"type": "string", "minLength": 1},
+              "weights_exact_set_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "decided_at": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision_status": {"const": "BLOCKED_PENDING_NAMED_REVIEW"}
+        }
+      },
+      "then": {
+        "properties": {
+          "subject": {
+            "properties": {
+              "exact_model_id": {"type": "string", "minLength": 1},
+              "resolved_revision": {"type": "string", "minLength": 1},
+              "weights_exact_set_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "applicable_legal_entity": {
+            "properties": {
+              "legal_name": {"type": "string", "minLength": 1},
+              "registration_identifier": {"type": "string", "minLength": 1},
+              "jurisdiction": {"type": "string", "minLength": 1},
+              "decision_capacity": {"type": "string", "minLength": 1}
+            }
+          },
+          "decided_at": {"type": "null"},
+          "rights_basis": {
+            "properties": {
+              "license_expression": {"type": "string", "minLength": 1},
+              "license_text_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "evidence": {
+            "minItems": 1,
+            "contains": {
+              "type": "object",
+              "required": ["evidence_type", "sha256", "review_status"],
+              "properties": {
+                "evidence_type": {"const": "LICENSE_TEXT"},
+                "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                "review_status": {"enum": ["FROZEN", "REVIEWED"]}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision_status": {"enum": ["DENIED", "APPROVED_LIMITED", "APPROVED"]}
+        }
+      },
+      "then": {
+        "properties": {
+          "subject": {
+            "properties": {
+              "exact_model_id": {"type": "string", "minLength": 1},
+              "resolved_revision": {"type": "string", "minLength": 1}
+            }
+          },
+          "applicable_legal_entity": {
+            "properties": {
+              "legal_name": {"type": "string", "minLength": 1},
+              "registration_identifier": {"type": "string", "minLength": 1},
+              "jurisdiction": {"type": "string", "minLength": 1},
+              "decision_capacity": {"type": "string", "minLength": 1}
+            }
+          },
+          "named_reviewer": {
+            "properties": {
+              "full_name": {"type": "string", "minLength": 1},
+              "role": {"type": "string", "minLength": 1},
+              "organization": {"type": "string", "minLength": 1},
+              "reviewer_identifier": {"type": "string", "minLength": 1},
+              "independence_statement": {"type": "string", "minLength": 1}
+            }
+          },
+          "decided_at": {"type": "string", "format": "date-time"},
+          "rights_basis": {
+            "properties": {
+              "license_expression": {"type": "string", "minLength": 1},
+              "license_text_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+            }
+          },
+          "evidence": {
+            "minItems": 1,
+            "contains": {
+              "type": "object",
+              "required": ["evidence_type", "sha256", "review_status"],
+              "properties": {
+                "evidence_type": {"const": "LICENSE_TEXT"},
+                "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                "review_status": {"const": "REVIEWED"}
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "permissions": {"$ref": "#/$defs/anyAuthorized"}
+        }
+      },
+      "then": {
+        "properties": {
+          "decision_status": {"enum": ["APPROVED_LIMITED", "APPROVED"]}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision_status": {"enum": ["APPROVED_LIMITED", "APPROVED"]}
+        }
+      },
+      "then": {
+        "properties": {
+          "permissions": {"$ref": "#/$defs/anyAuthorized"}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "permissions": {
+            "anyOf": [
+              {"properties": {"local_execution": {"const": "AUTHORIZED"}}},
+              {"properties": {"internal_evaluation": {"const": "AUTHORIZED"}}},
+              {"properties": {"training_or_finetuning": {"const": "AUTHORIZED"}}},
+              {"properties": {"create_derivative_model": {"const": "AUTHORIZED"}}},
+              {"properties": {"distribute_derivative_model": {"const": "AUTHORIZED"}}},
+              {"properties": {"redistribute_original_weights": {"const": "AUTHORIZED"}}},
+              {"properties": {"redistribute_quantized_weights": {"const": "AUTHORIZED"}}},
+              {"properties": {"distribute_adapter": {"const": "AUTHORIZED"}}},
+              {"properties": {"distribute_merged_weights": {"const": "AUTHORIZED"}}}
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "subject": {
+            "properties": {
+              "weights_exact_set_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "permissions": {
+            "properties": {
+              "redistribute_quantized_weights": {"const": "AUTHORIZED"}
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "subject": {
+            "properties": {
+              "quantization_config_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "permissions": {
+            "anyOf": [
+              {"properties": {"distribute_adapter": {"const": "AUTHORIZED"}}},
+              {"properties": {"distribute_merged_weights": {"const": "AUTHORIZED"}}}
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "subject": {
+            "properties": {
+              "adapter_exact_set_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

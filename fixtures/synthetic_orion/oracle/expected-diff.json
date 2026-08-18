@@ -1,0 +1,18 @@
+{
+  "classification": "SYNTHETIC_NOT_EVIDENCE",
+  "oracle_id": "orion-release-a-to-b-diff",
+  "expected_component_change": {
+    "candidate_id": "orion-crypto",
+    "from_version": "1.0.0",
+    "to_version": "1.1.0",
+    "from_observed_sha256": "84250237ed5d72467266a3b973c28a9ce6a72611bb84b54c613106e89dd69d79",
+    "to_observed_sha256": "fa2a7662365b95e23998623894afdd0a4937523a3bb0d5b0423584f6c4fa93a9"
+  },
+  "expected_relationship_change": {
+    "index": 1,
+    "from": {"from": "orion-app", "type": "DEPENDS_ON", "to": "orion-crypto"},
+    "to": {"from": "orion-app", "type": "GENERATED_FROM", "to": "orion-crypto"}
+  },
+  "unchanged_release_identity_fields": ["manufacturer", "product", "architecture", "hardware_revision", "artifact_relative_path"],
+  "changed_release_event_fields": ["release_id", "product_version", "build_id", "artifact_sha256", "release_timestamp", "sbom_version", "evidence_cutoff"]
+}

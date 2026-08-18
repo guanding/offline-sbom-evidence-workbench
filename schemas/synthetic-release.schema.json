@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/sbom-workbench/synthetic-release.schema.json",
+  "title": "Orion Synthetic Release Binding",
+  "x-classification": "SYNTHETIC_NOT_EVIDENCE",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "classification",
+    "release_id",
+    "manufacturer",
+    "product",
+    "product_version",
+    "build_id",
+    "architecture",
+    "hardware_revision",
+    "artifact_relative_path",
+    "artifact_sha256",
+    "inputs",
+    "release_timestamp",
+    "sbom_author",
+    "sbom_version",
+    "evidence_cutoff"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "classification": {"const": "SYNTHETIC_NOT_EVIDENCE"},
+    "release_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"},
+    "manufacturer": {"type": "string", "minLength": 1},
+    "product": {"type": "string", "minLength": 1},
+    "product_version": {"type": "string", "minLength": 1},
+    "build_id": {"type": "string", "minLength": 1},
+    "architecture": {"type": "string", "minLength": 1},
+    "hardware_revision": {"type": "string", "minLength": 1},
+    "artifact_relative_path": {"const": "artifacts/orion-bundle.tar"},
+    "artifact_sha256": {"$ref": "#/$defs/sha256"},
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["build_manifest", "artifact_inventory"],
+      "properties": {
+        "build_manifest": {
+          "allOf": [
+            {"$ref": "#/$defs/inputBinding"},
+            {"properties": {"relative_path": {"const": "evidence/build-manifest.json"}}}
+          ]
+        },
+        "artifact_inventory": {
+          "allOf": [
+            {"$ref": "#/$defs/inputBinding"},
+            {"properties": {"relative_path": {"const": "evidence/artifact-inventory.json"}}}
+          ]
+        }
+      }
+    },
+    "release_timestamp": {"type": "string", "format": "date-time", "pattern": "Z$"},
+    "sbom_author": {"type": "string", "minLength": 1},
+    "sbom_version": {"type": "string", "minLength": 1},
+    "evidence_cutoff": {"type": "string", "format": "date-time", "pattern": "Z$"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "inputBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relative_path", "sha256"],
+      "properties": {
+        "relative_path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

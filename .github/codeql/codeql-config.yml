@@ -1,0 +1,18 @@
+name: SBOM Workbench CodeQL configuration
+
+paths:
+  - src
+  - scripts
+  - tools
+  - release
+  - tests
+
+paths-ignore:
+  - runtime
+  - evidence
+  - vendor
+  - fixtures
+
+queries:
+  - uses: security-extended
+  - uses: security-and-quality

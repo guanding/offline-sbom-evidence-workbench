@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/sbom-workbench/source-registry.schema.json",
+  "title": "SBOM Workbench Source Dataset Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["registry_type", "schema_version", "updated_at", "sources"],
+  "properties": {
+    "registry_type": {"const": "source-dataset-registry"},
+    "schema_version": {"const": "1.0"},
+    "updated_at": {"type": "string", "format": "date"},
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/source"}
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dataset_id", "root_id", "name", "source_type", "upstream_url", "lineage_group",
+        "pin", "license", "governance", "acquisition", "notes"
+      ],
+      "properties": {
+        "dataset_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"},
+        "root_id": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "source_type": {"const": "git"},
+        "upstream_url": {"type": "string", "pattern": "^https://(github\\.com|git\\.openembedded\\.org|git\\.yoctoproject\\.org)(:443)?/[^?#]+$"},
+        "lineage_group": {"type": "string", "minLength": 1},
+        "pin": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ref_type", "ref_name", "resolved_commit", "tag_object", "acquisition_artifact_sha256"],
+          "properties": {
+            "ref_type": {"enum": ["commit", "annotated_tag"]},
+            "ref_name": {"type": "string", "minLength": 1},
+            "resolved_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+            "tag_object": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
+            "acquisition_artifact_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}
+          }
+        },
+        "license": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["expression", "review_status", "evidence_paths", "evidence_hashes", "content_scopes"],
+          "properties": {
+            "expression": {"type": "string", "minLength": 1},
+            "review_status": {"type": "string", "minLength": 1},
+            "evidence_paths": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+            "evidence_hashes": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}
+            },
+            "content_scopes": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["scope", "expression", "training_allowed", "raw_redistribution_allowed"],
+                "properties": {
+                  "scope": {"type": "string", "minLength": 1},
+                  "expression": {"type": "string", "minLength": 1},
+                  "training_allowed": {"type": "boolean"},
+                  "raw_redistribution_allowed": {"type": "boolean"}
+                }
+              }
+            }
+          }
+        },
+        "governance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "admission_status", "purposes", "split", "acquisition_allowed",
+            "internal_development_allowed", "evaluation_allowed", "training_allowed",
+            "fixture_distribution_allowed", "raw_redistribution_allowed",
+            "adapter_distribution_allowed", "weight_distribution_allowed", "shipping_examples_allowed",
+            "redistribution_status", "access_terms_status", "tdm_reservation_status",
+            "submodules_status", "lfs_status", "generated_content_status",
+            "binary_content_status", "attribution_status", "acquisition_status",
+            "rights_status", "usage_status", "format_validation_status", "release_status",
+            "rights_decision_ref", "rights_decision_sha256", "revalidation_triggers"
+          ],
+          "properties": {
+            "admission_status": {
+              "enum": ["REGISTERED_PENDING_REVIEW", "QUARANTINE_ACQUIRED", "RIGHTS_REVIEWED", "ADMITTED_FOR_INTERNAL_DEVELOPMENT", "ADMITTED_FOR_EVALUATION", "ADMITTED_FOR_TRAINING", "ADMITTED_FOR_PUBLIC_REGRESSION", "REJECT"]
+            },
+            "purposes": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+            "split": {"enum": ["TRAIN", "DEV", "PUBLIC_REGRESSION", "SEALED_BLIND_HOLDOUT", "CUSTOMER_SHADOW", "DEV_BUILD_YOCTO"]},
+            "acquisition_allowed": {"type": "boolean"},
+            "internal_development_allowed": {"type": "boolean"},
+            "training_allowed": {"type": "boolean"},
+            "evaluation_allowed": {"type": "boolean"},
+            "fixture_distribution_allowed": {"type": "boolean"},
+            "raw_redistribution_allowed": {"type": "boolean"},
+            "adapter_distribution_allowed": {"type": "boolean"},
+            "weight_distribution_allowed": {"type": "boolean"},
+            "shipping_examples_allowed": {"type": "boolean"},
+            "redistribution_status": {"type": "string", "minLength": 1},
+            "access_terms_status": {"type": "string", "minLength": 1},
+            "tdm_reservation_status": {"type": "string", "minLength": 1},
+            "submodules_status": {"type": "string", "minLength": 1},
+            "lfs_status": {"type": "string", "minLength": 1},
+            "generated_content_status": {"type": "string", "minLength": 1},
+            "binary_content_status": {"type": "string", "minLength": 1},
+            "attribution_status": {"type": "string", "minLength": 1},
+            "acquisition_status": {"enum": ["REGISTERED_PENDING_ACQUISITION", "ACQUIRED_UNSEALED", "FROZEN_VERIFIED_TECHNICAL", "REJECTED"]},
+            "rights_status": {"enum": ["AWAITING_LICENSE_EVIDENCE", "AWAITING_NAMED_REVIEW", "RIGHTS_REVIEWED", "REJECTED"]},
+            "usage_status": {"enum": ["NOT_ADMITTED", "ADMITTED_FOR_INTERNAL_DEVELOPMENT", "ADMITTED_FOR_EVALUATION", "ADMITTED_FOR_TRAINING", "ADMITTED_FOR_PUBLIC_REGRESSION"]},
+            "format_validation_status": {"enum": ["NOT_ASSESSED", "MECHANICALLY_VALIDATED", "REJECTED"]},
+            "release_status": {"enum": ["NOT_APPROVED", "APPROVED_FOR_SCOPED_USE", "REJECTED"]},
+            "rights_decision_ref": {"type": ["string", "null"]},
+            "rights_decision_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+            "revalidation_triggers": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+          }
+        },
+        "acquisition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["allow_submodules", "execute_code", "max_files", "max_total_bytes"],
+          "properties": {
+            "allow_submodules": {"const": false},
+            "execute_code": {"const": false},
+            "max_files": {"type": "integer", "minimum": 1, "maximum": 1000000},
+            "max_total_bytes": {"type": "integer", "minimum": 1, "maximum": 20000000000}
+          }
+        },
+        "notes": {"type": "string"}
+      }
+    }
+  }
+}

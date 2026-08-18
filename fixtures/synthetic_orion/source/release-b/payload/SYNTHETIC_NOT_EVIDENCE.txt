@@ -1,0 +1,2 @@
+SYNTHETIC_NOT_EVIDENCE
+Project-owned deterministic payload marker for Orion Release B.

@@ -1,0 +1,50 @@
+name: Bug report
+description: Report a reproducible defect using synthetic or public data only.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Do not attach customer SBOMs, credentials, proprietary source trees,
+        model secrets, or embargoed vulnerability details. Use SECURITY.md for
+        suspected vulnerabilities.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Provide an exact tag or commit SHA.
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python and platform
+      placeholder: Python 3.12, macOS arm64
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Use a minimal synthetic or publicly redistributable fixture.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and sanitized logs
+    validations:
+      required: true
+  - type: checkboxes
+    id: data-boundary
+    attributes:
+      label: Data boundary
+      options:
+        - label: I removed secrets, personal data, customer data, and embargoed vulnerability details.
+          required: true

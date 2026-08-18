@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "classification": "SYNTHETIC_NOT_EVIDENCE",
+  "evidence_id": "orion-conflict-build-manifest",
+  "release_id": "orion-conflict",
+  "lane_id": "build-manifest",
+  "source_kind": "SYNTHETIC_BUILD_MANIFEST",
+  "authorship": "HUMAN_AUTHORED_PROJECT_SYNTHETIC",
+  "origin": {
+    "kind": "SYNTHETIC_BUILD_DESCRIPTOR",
+    "relative_path": "../source/conflict/recipe/build-descriptor.json",
+    "sha256": "caaba96bfbc89557f4e62889f6befb38e69d9cf72782abded569273fe4c9ac8a"
+  },
+  "subject": {
+    "producer": "Orion Synthetic Devices",
+    "name": "Orion Edge Controller",
+    "version": "7.4.0-conflict-synthetic",
+    "identifiers": ["urn:synthetic:orion:edge-controller:7.4.0-conflict"],
+    "role": "ROOT_PRODUCT"
+  },
+  "artifact": {
+    "relative_path": "artifacts/orion-bundle.tar",
+    "sha256": "7dd09b8e8d138a40ec7b8a8e3a1664cb17915ec41de50af16a84657d2c83d47e"
+  },
+  "components": [
+    {"component_id": "orion-app", "component_role": "TOP_LEVEL", "producer": "Orion Synthetic Devices", "name": "Orion Application", "version": "2.4.0", "identifiers": ["pkg:generic/orion-synthetic/orion-app@2.4.0"], "provenance": {"kind": "SYNTHETIC_BUILD_RECORD", "locator": "build/app", "source_available": true}, "observed_hash": {"algorithm": "SHA-256", "value": "17b494fa12de446601c1400ae4b027822760ff30264c616077f6adea8f66f3a7"}, "supplier_hash": null},
+    {"component_id": "orion-crypto", "component_role": "TRANSITIVE", "producer": "Orion Synthetic Devices", "name": "Orion Crypto", "version": "1.0.0", "identifiers": ["pkg:generic/orion-synthetic/orion-crypto"], "provenance": {"kind": "SYNTHETIC_BUILD_RECORD", "locator": "build/crypto", "source_available": true}, "observed_hash": {"algorithm": "SHA-256", "value": "84250237ed5d72467266a3b973c28a9ce6a72611bb84b54c613106e89dd69d79"}, "supplier_hash": null}
+  ],
+  "relationships": [
+    {"from": "orion-root", "type": "CONTAINS", "to": "orion-app"},
+    {"from": "orion-app", "type": "DEPENDS_ON", "to": "orion-crypto"}
+  ],
+  "coverage": ["ROOT_PRODUCT", "TOP_LEVEL", "TRANSITIVE"],
+  "blindspots": ["BINARY_ARTIFACT_CONFLICT_NOT_RESOLVED", "UNKNOWN_ARTIFACT_SLOT_NOT_DECLARED"]
+}

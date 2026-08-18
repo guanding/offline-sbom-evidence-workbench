@@ -1,0 +1,213 @@
+{
+  "schema_version": "1.0",
+  "profiles": [
+    {
+      "profile_id": "yocto-6.0-core-image-minimal-qemuarm64",
+      "classification": "PUBLIC_BUILD_REFERENCE_NOT_CUSTOMER_EVIDENCE",
+      "reference": {
+        "upstream_release": "yocto-6.0",
+        "release_notes_url": "https://downloads.yoctoproject.org/releases/yocto/yocto-6.0/RELEASENOTES",
+        "source_revisions": {
+          "openembedded_core": "42fa856a00ac16b2a7a83d7ecfa60a5be192b16c",
+          "bitbake": "33581c84f3a85008239acbd940501a35de48dc91",
+          "meta_yocto": "904846ae078ee20de073040ebb77c86e19250f56"
+        },
+        "image_name": "core-image-minimal",
+        "machine": "qemuarm64",
+        "architecture": "aarch64-poky-linux",
+        "build_timestamp": "20260423205436",
+        "build_id": "core-image-minimal-qemuarm64.rootfs-20260423205436",
+        "reference_builder": "Yocto Project Autobuilder public upstream reference",
+        "release_timestamp": "2026-04-23T20:54:36Z"
+      },
+      "lanes": {
+        "build_metadata": {
+          "lane_id": "yocto-native-spdx-build-metadata",
+          "adapter_id": "yocto-spdx-3.0.1-build-metadata",
+          "independence_domain": "BUILD_METADATA"
+        },
+        "artifact_observation": {
+          "lane_id": "rootfs-tar-byte-observation",
+          "adapter_id": "rootfs-tar-artifact-observation",
+          "independence_domain": "ARTIFACT_OBSERVATION"
+        }
+      },
+      "payloads": [
+        {
+          "role": "build_spdx",
+          "url": "https://downloads.yoctoproject.org/releases/yocto/yocto-6.0/machines/qemu/qemuarm64/core-image-minimal-qemuarm64.rootfs-20260423205436.spdx.json",
+          "relative_path": "core-image-minimal-qemuarm64.rootfs-20260423205436.spdx.json",
+          "sha256": "ebea6c2a5c3ce50d305054abd6cdb47bdfe9648f3fdc0bdf29d02c795677f731",
+          "max_bytes": 4194304,
+          "media_type": "application/ld+json"
+        },
+        {
+          "role": "rootfs_archive",
+          "url": "https://downloads.yoctoproject.org/releases/yocto/yocto-6.0/machines/qemu/qemuarm64/core-image-minimal-qemuarm64.rootfs-20260423205436.tar.zst",
+          "relative_path": "core-image-minimal-qemuarm64.rootfs-20260423205436.tar.zst",
+          "sha256": "5733fbc18fe2506ac103fe7d92f307aab0f9ad2a4869c33fc6283cc02f4f36c3",
+          "max_bytes": 16777216,
+          "media_type": "application/zstd"
+        },
+        {
+          "role": "image_manifest",
+          "url": "https://downloads.yoctoproject.org/releases/yocto/yocto-6.0/machines/qemu/qemuarm64/core-image-minimal-qemuarm64.rootfs-20260423205436.manifest",
+          "relative_path": "core-image-minimal-qemuarm64.rootfs-20260423205436.manifest",
+          "sha256": "3d5de28a3aeb414a7d33b219b8594a0c2471182ee1917c4365666d884435b7f5",
+          "max_bytes": 131072,
+          "media_type": "text/plain"
+        },
+        {
+          "role": "testdata",
+          "url": "https://downloads.yoctoproject.org/releases/yocto/yocto-6.0/machines/qemu/qemuarm64/core-image-minimal-qemuarm64.rootfs-20260423205436.testdata.json",
+          "relative_path": "core-image-minimal-qemuarm64.rootfs-20260423205436.testdata.json",
+          "sha256": "6359f83b9578feedb1e58200d72c49ae57de220ab5d2055b628b3c55f4e83cca",
+          "max_bytes": 2097152,
+          "media_type": "application/json"
+        },
+        {
+          "role": "qemuboot",
+          "url": "https://downloads.yoctoproject.org/releases/yocto/yocto-6.0/machines/qemu/qemuarm64/core-image-minimal-qemuarm64.rootfs-20260423205436.qemuboot.conf",
+          "relative_path": "core-image-minimal-qemuarm64.rootfs-20260423205436.qemuboot.conf",
+          "sha256": "010a8587eb411056180701cdf784a8de5652869c8a10361123cea4d21021178d",
+          "max_bytes": 131072,
+          "media_type": "text/plain"
+        }
+      ],
+      "scope": {
+        "included": [
+          "INSTALLED_PACKAGES",
+          "ROOTFS_REGULAR_FILES",
+          "ROOTFS_SYMLINKS"
+        ],
+        "declared_exclusions": [
+          "HOST_NATIVE_BUILD_TOOLS",
+          "SDK_CONTENT",
+          "BUILD_ONLY_DEPENDENCIES",
+          "SEPARATE_KERNEL_AND_MODULE_ARTIFACTS",
+          "BOOTLOADER_AND_DTB",
+          "EXTERNAL_DEVICE_FIRMWARE",
+          "RUNTIME_DOWNLOADS_AND_PLUGINS"
+        ],
+        "blindspots": [
+          "ROOTFS_HAS_NO_COMPLETE_RUNTIME_PACKAGE_DATABASE",
+          "PRODUCER_NOT_EVIDENCED_PER_COMPONENT",
+          "NO_CUSTOMER_OR_MANUFACTURER_CONTEXT",
+          "NO_APP1_SOA_EXCHANGE",
+          "PUBLIC_AUTOBUILDER_OUTPUT_NOT_LOCAL_REBUILD"
+        ]
+      },
+      "limits": {
+        "max_json_bytes": 16777216,
+        "max_rootfs_files": 10000,
+        "max_rootfs_expanded_bytes": 268435456,
+        "max_path_bytes": 4096,
+        "zstd_timeout_seconds": 120
+      }
+    },
+    {
+      "profile_id": "yocto-6.0.2-core-image-minimal-qemuarm64",
+      "classification": "PUBLIC_BUILD_REFERENCE_NOT_CUSTOMER_EVIDENCE",
+      "reference": {
+        "upstream_release": "yocto-6.0.2",
+        "release_notes_url": "https://downloads.yoctoproject.org/releases/yocto/yocto-6.0.2/RELEASENOTES",
+        "source_revisions": {
+          "openembedded_core": "5d1aa5c806c061a2994f4decb59016610f093213",
+          "bitbake": "acfe02fa38b5da9e6a36c6cedcf91d4fcbefbfbd",
+          "meta_yocto": "24c24cef5d1523fefe43a3e3d34667b37ae551f3"
+        },
+        "image_name": "core-image-minimal",
+        "machine": "qemuarm64",
+        "architecture": "aarch64-poky-linux",
+        "build_timestamp": "20260624140206",
+        "build_id": "core-image-minimal-qemuarm64.rootfs-20260624140206",
+        "reference_builder": "Yocto Project Autobuilder public upstream reference",
+        "release_timestamp": "2026-06-24T14:02:06Z"
+      },
+      "lanes": {
+        "build_metadata": {
+          "lane_id": "yocto-native-spdx-build-metadata",
+          "adapter_id": "yocto-spdx-3.0.1-build-metadata",
+          "independence_domain": "BUILD_METADATA"
+        },
+        "artifact_observation": {
+          "lane_id": "rootfs-tar-byte-observation",
+          "adapter_id": "rootfs-tar-artifact-observation",
+          "independence_domain": "ARTIFACT_OBSERVATION"
+        }
+      },
+      "payloads": [
+        {
+          "role": "build_spdx",
+          "url": "https://downloads.yoctoproject.org/releases/yocto/yocto-6.0.2/machines/qemu/qemuarm64/core-image-minimal-qemuarm64.rootfs-20260624140206.spdx.json",
+          "relative_path": "core-image-minimal-qemuarm64.rootfs-20260624140206.spdx.json",
+          "sha256": "fe38c119a126f904ff101e6538d0c4e663bb88af778755d5e48ff1d5d8347fbd",
+          "max_bytes": 4194304,
+          "media_type": "application/ld+json"
+        },
+        {
+          "role": "rootfs_archive",
+          "url": "https://downloads.yoctoproject.org/releases/yocto/yocto-6.0.2/machines/qemu/qemuarm64/core-image-minimal-qemuarm64.rootfs-20260624140206.tar.zst",
+          "relative_path": "core-image-minimal-qemuarm64.rootfs-20260624140206.tar.zst",
+          "sha256": "4253d07cf65ad1b9262df80eb701f9c4389452e2b2508056b6f0d29849532f81",
+          "max_bytes": 16777216,
+          "media_type": "application/zstd"
+        },
+        {
+          "role": "image_manifest",
+          "url": "https://downloads.yoctoproject.org/releases/yocto/yocto-6.0.2/machines/qemu/qemuarm64/core-image-minimal-qemuarm64.rootfs-20260624140206.manifest",
+          "relative_path": "core-image-minimal-qemuarm64.rootfs-20260624140206.manifest",
+          "sha256": "82579cf854aaa32211fb45b18661bf9ffb6605051ef90eee92aac44b05fe4f20",
+          "max_bytes": 131072,
+          "media_type": "text/plain"
+        },
+        {
+          "role": "testdata",
+          "url": "https://downloads.yoctoproject.org/releases/yocto/yocto-6.0.2/machines/qemu/qemuarm64/core-image-minimal-qemuarm64.rootfs-20260624140206.testdata.json",
+          "relative_path": "core-image-minimal-qemuarm64.rootfs-20260624140206.testdata.json",
+          "sha256": "1f9b5b2f3f0ac8e4676fb6264c737048446811b4f9c6833832a37a0ae8959c63",
+          "max_bytes": 2097152,
+          "media_type": "application/json"
+        },
+        {
+          "role": "qemuboot",
+          "url": "https://downloads.yoctoproject.org/releases/yocto/yocto-6.0.2/machines/qemu/qemuarm64/core-image-minimal-qemuarm64.rootfs-20260624140206.qemuboot.conf",
+          "relative_path": "core-image-minimal-qemuarm64.rootfs-20260624140206.qemuboot.conf",
+          "sha256": "1950b7d5ae58a8aad4d62d52c47e290728af5f571e369f285ff5ef7dd2c6d270",
+          "max_bytes": 131072,
+          "media_type": "text/plain"
+        }
+      ],
+      "scope": {
+        "included": [
+          "INSTALLED_PACKAGES",
+          "ROOTFS_REGULAR_FILES",
+          "ROOTFS_SYMLINKS"
+        ],
+        "declared_exclusions": [
+          "HOST_NATIVE_BUILD_TOOLS",
+          "SDK_CONTENT",
+          "BUILD_ONLY_DEPENDENCIES",
+          "SEPARATE_KERNEL_AND_MODULE_ARTIFACTS",
+          "BOOTLOADER_AND_DTB",
+          "EXTERNAL_DEVICE_FIRMWARE",
+          "RUNTIME_DOWNLOADS_AND_PLUGINS"
+        ],
+        "blindspots": [
+          "ROOTFS_HAS_NO_COMPLETE_RUNTIME_PACKAGE_DATABASE",
+          "PRODUCER_NOT_EVIDENCED_PER_COMPONENT",
+          "NO_CUSTOMER_OR_MANUFACTURER_CONTEXT",
+          "NO_APP1_SOA_EXCHANGE",
+          "PUBLIC_AUTOBUILDER_OUTPUT_NOT_LOCAL_REBUILD"
+        ]
+      },
+      "limits": {
+        "max_json_bytes": 16777216,
+        "max_rootfs_files": 10000,
+        "max_rootfs_expanded_bytes": 268435456,
+        "max_path_bytes": 4096,
+        "zstd_timeout_seconds": 120
+      }
+    }
+  ]
+}

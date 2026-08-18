@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "classification": "SYNTHETIC_NOT_EVIDENCE",
+  "evidence_id": "orion-conflict-artifact-inventory",
+  "release_id": "orion-conflict",
+  "lane_id": "artifact-inventory",
+  "source_kind": "SYNTHETIC_ARTIFACT_INVENTORY",
+  "authorship": "HUMAN_AUTHORED_PROJECT_SYNTHETIC",
+  "origin": {
+    "kind": "DETERMINISTIC_TAR_ARTIFACT",
+    "relative_path": "artifacts/orion-bundle.tar",
+    "sha256": "7dd09b8e8d138a40ec7b8a8e3a1664cb17915ec41de50af16a84657d2c83d47e"
+  },
+  "subject": {
+    "producer": "Orion Synthetic Devices",
+    "name": "Orion Edge Controller",
+    "version": "7.4.0-conflict-synthetic",
+    "identifiers": ["urn:synthetic:orion:edge-controller:7.4.0-conflict"],
+    "role": "ROOT_PRODUCT"
+  },
+  "artifact": {
+    "relative_path": "artifacts/orion-bundle.tar",
+    "sha256": "7dd09b8e8d138a40ec7b8a8e3a1664cb17915ec41de50af16a84657d2c83d47e"
+  },
+  "components": [
+    {"component_id": "orion-app", "component_role": "TOP_LEVEL", "producer": "Orion Synthetic Devices", "name": "Orion Application", "version": "2.4.0", "identifiers": ["pkg:generic/orion-synthetic/orion-app@2.4.0"], "provenance": {"kind": "SYNTHETIC_BUILD_RECORD", "locator": "build/app", "source_available": true}, "observed_hash": {"algorithm": "SHA-256", "value": "17b494fa12de446601c1400ae4b027822760ff30264c616077f6adea8f66f3a7"}, "supplier_hash": null},
+    {"component_id": "orion-crypto", "component_role": "TRANSITIVE", "producer": "Orion Synthetic Devices", "name": "Orion Crypto", "version": "9.9.9-artifact-conflict", "identifiers": ["pkg:generic/orion-synthetic/orion-crypto"], "provenance": {"kind": "SYNTHETIC_BINARY_ARTIFACT", "locator": "artifact/crypto-conflict", "source_available": false}, "observed_hash": {"algorithm": "SHA-256", "value": "84250237ed5d72467266a3b973c28a9ce6a72611bb84b54c613106e89dd69d79"}, "supplier_hash": null},
+    {"component_id": "orion-unknown-blob", "component_role": "BINARY_ONLY_FIRMWARE", "producer": "UNKNOWN", "name": "UNKNOWN", "version": "UNKNOWN", "identifiers": ["UNKNOWN"], "provenance": {"kind": "SYNTHETIC_UNRESOLVED_ARTIFACT", "locator": "artifact/unresolved-slot", "source_available": false}, "observed_hash": {"algorithm": "SHA-256", "value": "ff9cf6723536b8c6ec0ba019db79d959b9478c890d7cdf3709ebafedcd2e381b"}, "supplier_hash": null}
+  ],
+  "relationships": [
+    {"from": "orion-root", "type": "CONTAINS", "to": "orion-app"},
+    {"from": "orion-app", "type": "DEPENDS_ON", "to": "orion-crypto"},
+    {"from": "orion-root", "type": "CONTAINS", "to": "orion-unknown-blob"}
+  ],
+  "coverage": ["ROOT_PRODUCT", "TOP_LEVEL", "TRANSITIVE", "BINARY_ONLY_FIRMWARE", "UNKNOWN"],
+  "blindspots": ["UNKNOWN_COMPONENT_IDENTITY", "CONFLICT_WITH_BUILD_MANIFEST"]
+}

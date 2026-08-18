@@ -1,0 +1,19 @@
+{
+  "classification": "SYNTHETIC_NOT_EVIDENCE",
+  "oracle_id": "orion-release-b-acceptance",
+  "expected_technical_status": "SYNTHETIC_RECONCILED",
+  "expected_exact_set": {
+    "schema_version": "1.0",
+    "root_id": "synthetic-orion/release-b@1",
+    "file_count": 5,
+    "total_bytes": 25661,
+    "exact_set_sha256": "8d337c74bdeaf17f299f8781453b66324426e7482f51eb806e6bddf5916fd450",
+    "files": [
+      {"relative_path": "artifacts/orion-bundle.tar", "sha256": "097fc4ded3f24ce2ac5ab1f665285b907d646452c166123347661a36bd2e4e8b", "size": 10240, "executable": false},
+      {"relative_path": "candidate-sbom.json", "sha256": "5fcce2bf22373143b4b2b594b5116e8190164931b44020a29e69718dcb6ae919", "size": 5125, "executable": false},
+      {"relative_path": "evidence/artifact-inventory.json", "sha256": "a2dcf74779c102454f8d931ecbe6545c12ed05948c82e46e11f0f0646f906f1f", "size": 4638, "executable": false},
+      {"relative_path": "evidence/build-manifest.json", "sha256": "4bfa9941ff7c4a63f6141d2483da98370e8e83e69a027711cb3ffedafae73d00", "size": 4640, "executable": false},
+      {"relative_path": "release.json", "sha256": "1ede6ff3f82af11c37d7446e3d06cca5e16735a1aff7b5aaa86b530a5c2582b4", "size": 1018, "executable": false}
+    ]
+  }
+}

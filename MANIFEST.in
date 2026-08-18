@@ -1,0 +1,14 @@
+include CHANGELOG.md
+include CODE_OF_CONDUCT.md
+include CONTRIBUTING.md
+include LICENSE
+include NOTICE
+include PUBLIC_RELEASE_CHECKLIST.md
+include README.md
+include RELEASE_PROCESS.md
+include SECURITY.md
+include SUPPORT.md
+include THIRD_PARTY_NOTICES.md
+recursive-include docs USER_GUIDE.md SYNTHETIC_MVP_ACCEPTANCE.md
+recursive-include release *.json *.md *.py *.sha256 *.txt
+recursive-include scripts normalize_sdist.py test_built_artifacts.sh

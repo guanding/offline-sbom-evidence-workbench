@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/sbom-workbench/selftest-profile.schema.json",
+  "title": "M3A Isolated Self-Test Scan Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile_id",
+    "classification",
+    "profile_kind",
+    "independence_domain",
+    "subject",
+    "scanner",
+    "scan",
+    "limits",
+    "blindspots"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "profile_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@+~-]{0,255}$"},
+    "classification": {"const": "SELF_TEST_NOT_CUSTOMER_EVIDENCE"},
+    "profile_kind": {"enum": ["SOURCE_DIRECTORY", "OCI_ARCHIVE", "PORTABLE_RUNTIME"]},
+    "independence_domain": {
+      "enum": ["SOURCE_DECLARATION", "BUILT_OCI_ARTIFACT", "PORTABLE_RUNTIME_OBSERVATION"]
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["comparison_namespace", "product_name", "declared_version"],
+      "properties": {
+        "comparison_namespace": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@+~-]{0,255}$"
+        },
+        "product_name": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "declared_version": {"type": "string", "minLength": 1, "maxLength": 4096}
+      }
+    },
+    "scanner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "binary_sha256", "config_sha256"],
+      "properties": {
+        "name": {"const": "syft"},
+        "version": {"const": "1.50.0"},
+        "binary_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "config_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "scan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_kind", "target_label"],
+      "properties": {
+        "target_kind": {"enum": ["dir", "docker-archive"]},
+        "target_label": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@+~-]{0,255}$"
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timeout_seconds", "max_json_bytes", "max_components"],
+      "properties": {
+        "timeout_seconds": {"type": "integer", "minimum": 1, "maximum": 3600},
+        "max_json_bytes": {"type": "integer", "minimum": 1024, "maximum": 268435456},
+        "max_components": {"type": "integer", "minimum": 1, "maximum": 100000}
+      }
+    },
+    "blindspots": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 4096},
+      "allOf": [
+        {"contains": {"const": "NO_CUSTOMER_OR_MANUFACTURER_CONTEXT"}},
+        {"contains": {"const": "NO_CRA_OR_PRE7_CONFORMITY_CLAIM"}},
+        {"contains": {"const": "NOT_YOCTO_M3B"}}
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"profile_kind": {"const": "SOURCE_DIRECTORY"}}},
+      "then": {
+        "properties": {
+          "independence_domain": {"const": "SOURCE_DECLARATION"},
+          "scan": {"properties": {"target_kind": {"const": "dir"}}}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"profile_kind": {"const": "OCI_ARCHIVE"}}},
+      "then": {
+        "properties": {
+          "independence_domain": {"const": "BUILT_OCI_ARTIFACT"},
+          "scan": {"properties": {"target_kind": {"const": "docker-archive"}}}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"profile_kind": {"const": "PORTABLE_RUNTIME"}}},
+      "then": {
+        "properties": {
+          "independence_domain": {"const": "PORTABLE_RUNTIME_OBSERVATION"},
+          "scan": {"properties": {"target_kind": {"const": "dir"}}}
+        }
+      }
+    }
+  ]
+}

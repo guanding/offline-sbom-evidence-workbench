@@ -1,0 +1,91 @@
+{
+  "registry_type": "runtime-registry",
+  "schema_version": "1.0",
+  "updated_at": "2026-08-11",
+  "runtimes": [
+    {
+      "runtime_id": "omlx-0.5.1-local",
+      "category": "model_server",
+      "name": "oMLX",
+      "version": "0.5.1",
+      "source_url": "https://github.com/jundot/omlx.git",
+      "resolved_commit": "50ee24645204f33f758d7794258dec0f7db79233",
+      "license_expression": "Apache-2.0",
+      "status": "LOCALLY_OBSERVED",
+      "artifact_sha256": "58b2d7aae13f8aefd3453860bbe151a56586e0ec9e62cc183a8a0e8867314bc8",
+      "config_sha256": "03719284b16bfcdf5b190c6e9f2bc9a52ed208cd44781e13a12b40a2b9d700ef",
+      "dependency_manifest_sha256": null,
+      "notes": "本机 CLI 版本、二进制哈希与 2026-08-04 运行配置哈希已观察；配置内容含本机敏感字段，未复制入仓库，脱敏控制观察见 datasets/m5_local_model_observations.json。尚未证明该二进制由所列 tag commit 可重复构建。模型权重另行登记。"
+    },
+    {
+      "runtime_id": "syft-1.50.0",
+      "category": "scanner",
+      "name": "Syft",
+      "version": "1.50.0",
+      "source_url": "https://github.com/anchore/syft.git",
+      "resolved_commit": "16223e6dd7893fe578787658ceb876257483d404",
+      "license_expression": "Apache-2.0",
+      "status": "LOCALLY_OBSERVED",
+      "artifact_sha256": "5d59c9e6fa641793ddb48bc90b5b7ad63bf7303a52835b75b1beee3757463998",
+      "config_sha256": "9aee3e875e9cafcb974a70517a522059598073e0f809dcd2dd9fab9bbb5eb5a5",
+      "dependency_manifest_sha256": null,
+      "notes": "M3A 于 2026-08-04 获取官方 darwin_arm64 v1.50.0 发布资产；archive SHA-256 固定并匹配 e32fdb9d47823fa633748a1efca2528fd77c37469ea93c9e40ab835da44e4cce，二进制/配置哈希已实测并见 evidence/acquisition/syft-1.50.0-darwin-arm64.receipt.json。官方 dependency manifest 未获取，故保持 LOCALLY_OBSERVED 而非 FROZEN。扫描输出不作为完整性真值。"
+    },
+    {
+      "runtime_id": "cdxgen-12.8.2",
+      "category": "scanner",
+      "name": "cdxgen",
+      "version": "12.8.2",
+      "source_url": "https://github.com/CycloneDX/cdxgen.git",
+      "resolved_commit": "ab182e7dda654e1a684a78d40da210d7308aecd4",
+      "license_expression": "Apache-2.0",
+      "status": "REGISTERED_NOT_ACQUIRED",
+      "artifact_sha256": null,
+      "config_sha256": null,
+      "dependency_manifest_sha256": null,
+      "notes": "仅在白名单断网沙箱中用于应用/锁文件补充。"
+    },
+    {
+      "runtime_id": "cyclonedx-cli-0.33.1",
+      "category": "validator",
+      "name": "CycloneDX CLI",
+      "version": "0.33.1",
+      "source_url": "https://github.com/CycloneDX/cyclonedx-cli.git",
+      "resolved_commit": "b3cfa4b0edc356dad07e0b6e7ab6da0a94af0246",
+      "license_expression": "Apache-2.0",
+      "status": "REGISTERED_NOT_ACQUIRED",
+      "artifact_sha256": null,
+      "config_sha256": null,
+      "dependency_manifest_sha256": null,
+      "notes": "CycloneDX 机械验证；PASS 不证明事实完整。"
+    },
+    {
+      "runtime_id": "spdx-tools-java-2.0.7",
+      "category": "validator",
+      "name": "SPDX tools-java",
+      "version": "2.0.7",
+      "source_url": "https://github.com/spdx/tools-java.git",
+      "resolved_commit": "5273da239bd9f511084290e54c82751dca26b6f2",
+      "license_expression": "Apache-2.0",
+      "status": "REGISTERED_NOT_ACQUIRED",
+      "artifact_sha256": null,
+      "config_sha256": null,
+      "dependency_manifest_sha256": null,
+      "notes": "SPDX 3.0.1 机械验证候选；需固定发布二进制和依赖。"
+    },
+    {
+      "runtime_id": "cosign-3.1.2",
+      "category": "signing",
+      "name": "cosign",
+      "version": "3.1.2",
+      "source_url": "https://github.com/sigstore/cosign.git",
+      "resolved_commit": "dc80df70da727f4abdd843640594025584a270ae",
+      "license_expression": "Apache-2.0",
+      "status": "LOCALLY_OBSERVED",
+      "artifact_sha256": "dec1c3f802320b19c2fbcf2dc7bcfb3f258e1c181a046c23a1a074bdf932f10a",
+      "config_sha256": null,
+      "dependency_manifest_sha256": null,
+      "notes": "M7-3 离线 key 签名（sign-blob/verify-blob --key --tlog-upload=false，signing.py allowlist+denylist 守卫）。binary 于 2026-08-05 经 scripts/acquire_cosign_m7.sh 获取（loopback proxy 7897），sha256 dec1c3f8... 匹配官方 cosign_checksums.txt、version v3.1.2 实测，acquisition-receipt 见 runtime/tools/cosign-3.1.2/。2026-08-11 真实 e2e 验证：sign-selftest-pack + verify-signature 往返通过，ite6 篡改 fail-closed（receipt subject 绑定）；signing.py 已适配 cosign 3.1.2 离线 key 模式（commit 6780e8e）。未证明可重复构建，保持 LOCALLY_OBSERVED 而非 FROZEN。"
+    }
+  ]
+}

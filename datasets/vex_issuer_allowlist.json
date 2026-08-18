@@ -1,0 +1,17 @@
+{
+  "registry_type": "vex-issuer-registry",
+  "schema_version": "vex-issuer-allowlist-1.0",
+  "updated_at": "2026-08-05",
+  "issuers": [
+    {
+      "issuer_id": "example-psirt-placeholder",
+      "display_name": "Example PSIRT (placeholder, not admitted)",
+      "identity_kind": "cosign-offline-key",
+      "public_key_path": null,
+      "public_key_sha256": null,
+      "acquisition_receipt_ref": null,
+      "status": "NOT_ADMITTED",
+      "boundary": "VEX issuer registry placeholder. Admission requires a cosign offline key acquisition receipt plus a pinned public_key_sha256; this entry records no key material and admits no VEX statement. VEX intake is evidence recording only, never CRA/prEN conformity or release authority."
+    }
+  ]
+}

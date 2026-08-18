@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools==84.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "offline-sbom-evidence-workbench"
+version = "0.5.0-rc.1"
+description = "Offline, evidence-driven SBOM workbench"
+requires-python = ">=3.12,<3.13"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]
+classifiers = [
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: POSIX",
+]
+dependencies = [
+  "jsonschema==4.26.0",
+  "pyshacl==0.40.1",
+]
+
+[project.scripts]
+sbom-workbench = "sbom_workbench.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+sbom_workbench = ["static/*.css", "static/*.html", "static/*.js"]
+
+# Only project-owned schemas, registries, and synthetic fixtures are public
+# package data.  Rights-restricted vendor/specs is intentionally absent; an
+# installed artifact must receive that closure through the documented BYO gate.
+[tool.setuptools.data-files]
+"share/offline-sbom-evidence-workbench/release" = ["release/project_owned_assets.sha256", "release/rights_review.json"]
+"share/offline-sbom-evidence-workbench/schemas" = ["schemas/*.json"]
+"share/offline-sbom-evidence-workbench/datasets" = ["datasets/*.json"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/release-a" = ["fixtures/synthetic_orion/release-a/*.json"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/release-a/artifacts" = ["fixtures/synthetic_orion/release-a/artifacts/*.tar"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/release-a/evidence" = ["fixtures/synthetic_orion/release-a/evidence/*.json"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/release-b" = ["fixtures/synthetic_orion/release-b/*.json"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/release-b/artifacts" = ["fixtures/synthetic_orion/release-b/artifacts/*.tar"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/release-b/evidence" = ["fixtures/synthetic_orion/release-b/evidence/*.json"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/conflict" = ["fixtures/synthetic_orion/conflict/*.json"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/conflict/artifacts" = ["fixtures/synthetic_orion/conflict/artifacts/*.tar"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/conflict/evidence" = ["fixtures/synthetic_orion/conflict/evidence/*.json"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/oracle" = ["fixtures/synthetic_orion/oracle/*.json"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/source/release-a/payload" = ["fixtures/synthetic_orion/source/release-a/payload/*"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/source/release-a/recipe" = ["fixtures/synthetic_orion/source/release-a/recipe/*.json"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/source/release-b/payload" = ["fixtures/synthetic_orion/source/release-b/payload/*"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/source/release-b/recipe" = ["fixtures/synthetic_orion/source/release-b/recipe/*.json"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/source/conflict/payload" = ["fixtures/synthetic_orion/source/conflict/payload/*"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/source/conflict/recipe" = ["fixtures/synthetic_orion/source/conflict/recipe/*.json"]
+"share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/tools" = ["fixtures/synthetic_orion/tools/*.py"]

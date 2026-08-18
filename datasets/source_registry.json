@@ -1,0 +1,749 @@
+{
+  "registry_type": "source-dataset-registry",
+  "schema_version": "1.0",
+  "updated_at": "2026-08-02",
+  "sources": [
+    {
+      "dataset_id": "cyclonedx-bom-examples",
+      "root_id": "cyclonedx-bom-examples@7d9172d00c88c05a8f1ccb90589d111870fc9d86",
+      "name": "CycloneDX BOM Examples",
+      "source_type": "git",
+      "upstream_url": "https://github.com/CycloneDX/bom-examples.git",
+      "lineage_group": "cyclonedx-bom-examples",
+      "pin": {
+        "ref_type": "commit",
+        "ref_name": "7d9172d00c88c05a8f1ccb90589d111870fc9d86",
+        "resolved_commit": "7d9172d00c88c05a8f1ccb90589d111870fc9d86",
+        "tag_object": null,
+        "acquisition_artifact_sha256": "bc3807d58eeba158e8484f31d2b444f62fcb8cc4e38355291a1026f43e1c5147"
+      },
+      "license": {
+        "expression": "CC0-1.0",
+        "review_status": "PRELIMINARY_LICENSE_IDENTIFIED",
+        "evidence_paths": ["LICENSE"],
+        "evidence_hashes": {"LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"},
+        "content_scopes": [
+          {"scope": "repository", "expression": "CC0-1.0", "training_allowed": false, "raw_redistribution_allowed": true}
+        ]
+      },
+      "governance": {
+        "admission_status": "QUARANTINE_ACQUIRED",
+        "purposes": ["FORMAT_EXAMPLES", "PUBLIC_REGRESSION_CANDIDATE"],
+        "split": "PUBLIC_REGRESSION",
+        "acquisition_allowed": true,
+        "internal_development_allowed": false,
+        "training_allowed": false,
+        "evaluation_allowed": false,
+        "fixture_distribution_allowed": false,
+        "raw_redistribution_allowed": false,
+        "adapter_distribution_allowed": false,
+        "weight_distribution_allowed": false,
+        "redistribution_status": "NOT_APPROVED_PENDING_NAMED_RIGHTS_REVIEW",
+        "access_terms_status": "PUBLIC_GITHUB_TERMS_NOT_FROZEN",
+        "tdm_reservation_status": "NOT_ASSESSED_NOT_USED_FOR_TRAINING",
+        "submodules_status": "FORBIDDEN_NOT_ACQUIRED",
+        "lfs_status": "FORBIDDEN_NOT_ACQUIRED",
+        "generated_content_status": "NOT_ASSESSED",
+        "binary_content_status": "NOT_ASSESSED",
+        "attribution_status": "SOURCE_AND_COMMIT_RETAINED",
+        "acquisition_status": "FROZEN_VERIFIED_TECHNICAL",
+        "rights_status": "AWAITING_NAMED_REVIEW",
+        "usage_status": "NOT_ADMITTED",
+        "format_validation_status": "NOT_ASSESSED",
+        "release_status": "NOT_APPROVED",
+        "rights_decision_ref": null,
+        "rights_decision_sha256": null,
+        "revalidation_triggers": ["SOURCE_VERSION_CHANGE", "LICENSE_CHANGE", "USAGE_SCOPE_CHANGE"],
+        "shipping_examples_allowed": false
+      },
+      "acquisition": {
+        "allow_submodules": false,
+        "execute_code": false,
+        "max_files": 5000,
+        "max_total_bytes": 250000000
+      },
+      "notes": "格式与 round-trip 正例；不得作为组件完整性真值。"
+    },
+    {
+      "dataset_id": "cyclonedx-specification-1.7",
+      "root_id": "cyclonedx-specification-1.7@4b3f59453366e27c8073fd24e98bf21ef8892c8e",
+      "name": "CycloneDX Specification 1.7",
+      "source_type": "git",
+      "upstream_url": "https://github.com/CycloneDX/specification.git",
+      "lineage_group": "cyclonedx-specification",
+      "pin": {
+        "ref_type": "commit",
+        "ref_name": "1.7",
+        "resolved_commit": "4b3f59453366e27c8073fd24e98bf21ef8892c8e",
+        "tag_object": null,
+        "acquisition_artifact_sha256": null
+      },
+      "license": {
+        "expression": "Apache-2.0",
+        "review_status": "PENDING_NAMED_REVIEW",
+        "evidence_paths": ["LICENSE"],
+        "evidence_hashes": {"LICENSE": null},
+        "content_scopes": [
+          {"scope": "repository", "expression": "Apache-2.0", "training_allowed": false, "raw_redistribution_allowed": true}
+        ]
+      },
+      "governance": {
+        "admission_status": "REGISTERED_PENDING_REVIEW",
+        "purposes": ["FORMAT_SCHEMA_CANDIDATE", "SCHEMA_VALIDATION_CANDIDATE"],
+        "split": "PUBLIC_REGRESSION",
+        "acquisition_allowed": true,
+        "internal_development_allowed": false,
+        "training_allowed": false,
+        "evaluation_allowed": false,
+        "fixture_distribution_allowed": false,
+        "raw_redistribution_allowed": false,
+        "adapter_distribution_allowed": false,
+        "weight_distribution_allowed": false,
+        "redistribution_status": "CONDITIONAL_APACHE_NOTICE",
+        "access_terms_status": "PUBLIC_GITHUB_TERMS_NOT_FROZEN",
+        "tdm_reservation_status": "NOT_ASSESSED_NOT_USED_FOR_TRAINING",
+        "submodules_status": "FORBIDDEN_NOT_ACQUIRED",
+        "lfs_status": "FORBIDDEN_NOT_ACQUIRED",
+        "generated_content_status": "NOT_ASSESSED",
+        "binary_content_status": "NOT_ASSESSED",
+        "attribution_status": "APACHE_NOTICE_REQUIRED",
+        "acquisition_status": "REGISTERED_PENDING_ACQUISITION",
+        "rights_status": "AWAITING_LICENSE_EVIDENCE",
+        "usage_status": "NOT_ADMITTED",
+        "format_validation_status": "NOT_ASSESSED",
+        "release_status": "NOT_APPROVED",
+        "rights_decision_ref": null,
+        "rights_decision_sha256": null,
+        "revalidation_triggers": ["SOURCE_VERSION_CHANGE", "LICENSE_CHANGE", "USAGE_SCOPE_CHANGE"],
+        "shipping_examples_allowed": false
+      },
+      "acquisition": {
+        "allow_submodules": false,
+        "execute_code": false,
+        "max_files": 10000,
+        "max_total_bytes": 250000000
+      },
+      "notes": "绑定 1.7 schema；schema PASS 不证明组件或关系真实。"
+    },
+    {
+      "dataset_id": "spdx-examples",
+      "root_id": "spdx-examples@2181917ef6ff74de89252ee785583c27a38d6199",
+      "name": "SPDX Examples",
+      "source_type": "git",
+      "upstream_url": "https://github.com/spdx/spdx-examples.git",
+      "lineage_group": "spdx-examples",
+      "pin": {
+        "ref_type": "commit",
+        "ref_name": "2181917ef6ff74de89252ee785583c27a38d6199",
+        "resolved_commit": "2181917ef6ff74de89252ee785583c27a38d6199",
+        "tag_object": null,
+        "acquisition_artifact_sha256": null
+      },
+      "license": {
+        "expression": "MIXED: GPL-3.0-or-later AND CC-BY-4.0 AND per-file exceptions",
+        "review_status": "LEGAL_REVIEW_REQUIRED",
+        "evidence_paths": ["README.md", "COPYING"],
+        "evidence_hashes": {"README.md": null, "COPYING": null},
+        "content_scopes": [
+          {"scope": "source-code-unless-overridden", "expression": "GPL-3.0-or-later", "training_allowed": false, "raw_redistribution_allowed": false},
+          {"scope": "documentation", "expression": "CC-BY-4.0", "training_allowed": false, "raw_redistribution_allowed": false},
+          {"scope": "spdx-documents", "expression": "CC0-1.0", "training_allowed": false, "raw_redistribution_allowed": true}
+        ]
+      },
+      "governance": {
+        "admission_status": "REGISTERED_PENDING_REVIEW",
+        "purposes": ["CURATED_PAIR", "FORMAT_REGRESSION"],
+        "split": "PUBLIC_REGRESSION",
+        "acquisition_allowed": true,
+        "internal_development_allowed": false,
+        "training_allowed": false,
+        "evaluation_allowed": false,
+        "fixture_distribution_allowed": false,
+        "raw_redistribution_allowed": false,
+        "adapter_distribution_allowed": false,
+        "weight_distribution_allowed": false,
+        "redistribution_status": "BLOCKED_PENDING_PER_SCOPE_SELECTION",
+        "access_terms_status": "PUBLIC_GITHUB_TERMS_NOT_FROZEN",
+        "tdm_reservation_status": "NOT_ASSESSED_NOT_USED_FOR_TRAINING",
+        "submodules_status": "FORBIDDEN_NOT_ACQUIRED",
+        "lfs_status": "FORBIDDEN_NOT_ACQUIRED",
+        "generated_content_status": "NOT_ASSESSED",
+        "binary_content_status": "NOT_ASSESSED",
+        "attribution_status": "PER_SCOPE_OBLIGATIONS_REQUIRED",
+        "acquisition_status": "REGISTERED_PENDING_ACQUISITION",
+        "rights_status": "AWAITING_LICENSE_EVIDENCE",
+        "usage_status": "NOT_ADMITTED",
+        "format_validation_status": "NOT_ASSESSED",
+        "release_status": "NOT_APPROVED",
+        "rights_decision_ref": null,
+        "rights_decision_sha256": null,
+        "revalidation_triggers": ["SOURCE_VERSION_CHANGE", "LICENSE_CHANGE", "CONTENT_SCOPE_CHANGE"],
+        "shipping_examples_allowed": false
+      },
+      "acquisition": {
+        "allow_submodules": false,
+        "execute_code": false,
+        "max_files": 20000,
+        "max_total_bytes": 500000000
+      },
+      "notes": "可隔离用于 source/binary/SBOM 配对验证；逐文件许可后方可再分发。"
+    },
+    {
+      "dataset_id": "openembedded-core-yocto-6.0.2",
+      "root_id": "openembedded-core-yocto-6.0.2@5d1aa5c806c061a2994f4decb59016610f093213",
+      "name": "OpenEmbedded Core Yocto 6.0.2",
+      "source_type": "git",
+      "upstream_url": "https://git.openembedded.org/openembedded-core",
+      "lineage_group": "openembedded-core",
+      "pin": {
+        "ref_type": "annotated_tag",
+        "ref_name": "yocto-6.0.2",
+        "resolved_commit": "5d1aa5c806c061a2994f4decb59016610f093213",
+        "tag_object": "8ecd6056805602dc99c4cd110b04e39ae5424610",
+        "acquisition_artifact_sha256": null
+      },
+      "license": {
+        "expression": "MIXED_FILE_AND_RECIPE_LEVEL",
+        "review_status": "ACQUIRE_ONLY_RECIPE_REVIEW_REQUIRED",
+        "evidence_paths": ["LICENSE"],
+        "evidence_hashes": {"LICENSE": null},
+        "content_scopes": [
+          {"scope": "metadata-default", "expression": "MIT", "training_allowed": false, "raw_redistribution_allowed": false},
+          {"scope": "otherwise-unspecified-files", "expression": "GPL-2.0-only", "training_allowed": false, "raw_redistribution_allowed": false},
+          {"scope": "recipe-sources-and-patches", "expression": "PER_RECIPE", "training_allowed": false, "raw_redistribution_allowed": false}
+        ]
+      },
+      "governance": {
+        "admission_status": "REGISTERED_PENDING_REVIEW",
+        "purposes": ["DEV_BUILD_YOCTO", "BUILD_REFERENCE"],
+        "split": "DEV_BUILD_YOCTO",
+        "acquisition_allowed": true,
+        "internal_development_allowed": false,
+        "training_allowed": false,
+        "evaluation_allowed": false,
+        "fixture_distribution_allowed": false,
+        "raw_redistribution_allowed": false,
+        "adapter_distribution_allowed": false,
+        "weight_distribution_allowed": false,
+        "redistribution_status": "BLOCKED_PENDING_FILE_AND_RECIPE_REVIEW",
+        "access_terms_status": "PUBLIC_UPSTREAM_TERMS_NOT_FROZEN",
+        "tdm_reservation_status": "NOT_ASSESSED_NOT_USED_FOR_TRAINING",
+        "submodules_status": "FORBIDDEN_NOT_ACQUIRED",
+        "lfs_status": "FORBIDDEN_NOT_ACQUIRED",
+        "generated_content_status": "NOT_ASSESSED",
+        "binary_content_status": "NOT_ASSESSED",
+        "attribution_status": "PER_FILE_AND_RECIPE_OBLIGATIONS_REQUIRED",
+        "acquisition_status": "REGISTERED_PENDING_ACQUISITION",
+        "rights_status": "AWAITING_LICENSE_EVIDENCE",
+        "usage_status": "NOT_ADMITTED",
+        "format_validation_status": "NOT_ASSESSED",
+        "release_status": "NOT_APPROVED",
+        "rights_decision_ref": null,
+        "rights_decision_sha256": null,
+        "revalidation_triggers": ["SOURCE_VERSION_CHANGE", "RECIPE_SET_CHANGE", "LICENSE_CHANGE"],
+        "shipping_examples_allowed": false
+      },
+      "acquisition": {
+        "allow_submodules": false,
+        "execute_code": false,
+        "max_files": 100000,
+        "max_total_bytes": 2000000000
+      },
+      "notes": "MVP build 候选；构建取回的每个上游源码和补丁必须按 recipe 独立处理。"
+    },
+    {
+      "dataset_id": "syft-fixtures-v1.50.0",
+      "root_id": "syft-fixtures-v1.50.0@16223e6dd7893fe578787658ceb876257483d404",
+      "name": "Syft v1.50.0 fixtures",
+      "source_type": "git",
+      "upstream_url": "https://github.com/anchore/syft.git",
+      "lineage_group": "anchore-syft",
+      "pin": {
+        "ref_type": "annotated_tag",
+        "ref_name": "v1.50.0",
+        "resolved_commit": "16223e6dd7893fe578787658ceb876257483d404",
+        "tag_object": "453be0744f58d693e37ffd0cc5303e6c15bdd074",
+        "acquisition_artifact_sha256": null
+      },
+      "license": {
+        "expression": "Apache-2.0; fixtures require third-party review",
+        "review_status": "CONDITIONAL_FIXTURE_REVIEW",
+        "evidence_paths": ["LICENSE"],
+        "evidence_hashes": {"LICENSE": null},
+        "content_scopes": [
+          {"scope": "project-code", "expression": "Apache-2.0", "training_allowed": false, "raw_redistribution_allowed": false},
+          {"scope": "third-party-fixtures", "expression": "PER_FILE_REVIEW", "training_allowed": false, "raw_redistribution_allowed": false}
+        ]
+      },
+      "governance": {
+        "admission_status": "REGISTERED_PENDING_REVIEW",
+        "purposes": ["DEV_EXTRACTOR", "ADVERSARIAL_REGRESSION"],
+        "split": "DEV",
+        "acquisition_allowed": true,
+        "internal_development_allowed": false,
+        "training_allowed": false,
+        "evaluation_allowed": false,
+        "fixture_distribution_allowed": false,
+        "raw_redistribution_allowed": false,
+        "adapter_distribution_allowed": false,
+        "weight_distribution_allowed": false,
+        "redistribution_status": "BLOCKED_PENDING_FIXTURE_REVIEW",
+        "access_terms_status": "PUBLIC_GITHUB_TERMS_NOT_FROZEN",
+        "tdm_reservation_status": "NOT_ASSESSED_NOT_USED_FOR_TRAINING",
+        "submodules_status": "FORBIDDEN_NOT_ACQUIRED",
+        "lfs_status": "FORBIDDEN_NOT_ACQUIRED",
+        "generated_content_status": "NOT_ASSESSED",
+        "binary_content_status": "THIRD_PARTY_FIXTURES_NOT_ASSESSED",
+        "attribution_status": "APACHE_AND_THIRD_PARTY_NOTICE_REQUIRED",
+        "acquisition_status": "REGISTERED_PENDING_ACQUISITION",
+        "rights_status": "AWAITING_LICENSE_EVIDENCE",
+        "usage_status": "NOT_ADMITTED",
+        "format_validation_status": "NOT_ASSESSED",
+        "release_status": "NOT_APPROVED",
+        "rights_decision_ref": null,
+        "rights_decision_sha256": null,
+        "revalidation_triggers": ["SOURCE_VERSION_CHANGE", "FIXTURE_SET_CHANGE", "LICENSE_CHANGE"],
+        "shipping_examples_allowed": false
+      },
+      "acquisition": {
+        "allow_submodules": false,
+        "execute_code": false,
+        "max_files": 100000,
+        "max_total_bytes": 1000000000
+      },
+      "notes": "工具自身 fixture 只证明兼容/回归，不能独立评估 Syft 准确率。"
+    },
+    {
+      "dataset_id": "cdxgen-fixtures-v12.8.2",
+      "root_id": "cdxgen-fixtures-v12.8.2@ab182e7dda654e1a684a78d40da210d7308aecd4",
+      "name": "cdxgen v12.8.2 fixtures",
+      "source_type": "git",
+      "upstream_url": "https://github.com/CycloneDX/cdxgen.git",
+      "lineage_group": "cyclonedx-cdxgen",
+      "pin": {
+        "ref_type": "commit",
+        "ref_name": "v12.8.2",
+        "resolved_commit": "ab182e7dda654e1a684a78d40da210d7308aecd4",
+        "tag_object": null,
+        "acquisition_artifact_sha256": null
+      },
+      "license": {
+        "expression": "Apache-2.0; fixtures require third-party review",
+        "review_status": "CONDITIONAL_FIXTURE_REVIEW",
+        "evidence_paths": ["LICENSE"],
+        "evidence_hashes": {"LICENSE": null},
+        "content_scopes": [
+          {"scope": "project-code", "expression": "Apache-2.0", "training_allowed": false, "raw_redistribution_allowed": false},
+          {"scope": "third-party-fixtures", "expression": "PER_FILE_REVIEW", "training_allowed": false, "raw_redistribution_allowed": false}
+        ]
+      },
+      "governance": {
+        "admission_status": "REGISTERED_PENDING_REVIEW",
+        "purposes": ["DEV_EXTRACTOR", "MANIFEST_REGRESSION"],
+        "split": "DEV",
+        "acquisition_allowed": true,
+        "internal_development_allowed": false,
+        "training_allowed": false,
+        "evaluation_allowed": false,
+        "fixture_distribution_allowed": false,
+        "raw_redistribution_allowed": false,
+        "adapter_distribution_allowed": false,
+        "weight_distribution_allowed": false,
+        "redistribution_status": "BLOCKED_PENDING_FIXTURE_REVIEW",
+        "access_terms_status": "PUBLIC_GITHUB_TERMS_NOT_FROZEN",
+        "tdm_reservation_status": "NOT_ASSESSED_NOT_USED_FOR_TRAINING",
+        "submodules_status": "FORBIDDEN_NOT_ACQUIRED",
+        "lfs_status": "FORBIDDEN_NOT_ACQUIRED",
+        "generated_content_status": "NOT_ASSESSED",
+        "binary_content_status": "THIRD_PARTY_FIXTURES_NOT_ASSESSED",
+        "attribution_status": "APACHE_AND_THIRD_PARTY_NOTICE_REQUIRED",
+        "acquisition_status": "REGISTERED_PENDING_ACQUISITION",
+        "rights_status": "AWAITING_LICENSE_EVIDENCE",
+        "usage_status": "NOT_ADMITTED",
+        "format_validation_status": "NOT_ASSESSED",
+        "release_status": "NOT_APPROVED",
+        "rights_decision_ref": null,
+        "rights_decision_sha256": null,
+        "revalidation_triggers": ["SOURCE_VERSION_CHANGE", "FIXTURE_SET_CHANGE", "LICENSE_CHANGE"],
+        "shipping_examples_allowed": false
+      },
+      "acquisition": {
+        "allow_submodules": false,
+        "execute_code": false,
+        "max_files": 100000,
+        "max_total_bytes": 1000000000
+      },
+      "notes": "仅静态读取 fixture；禁止运行包管理器、workflow 或构建脚本。"
+    },
+    {
+      "dataset_id": "sbom-tool-fixtures-v4.1.11",
+      "root_id": "sbom-tool-fixtures-v4.1.11@4091b7bcce1640c4db42b5fad63d7d1b7bc0e4cf",
+      "name": "Microsoft sbom-tool v4.1.11 fixtures",
+      "source_type": "git",
+      "upstream_url": "https://github.com/microsoft/sbom-tool.git",
+      "lineage_group": "microsoft-sbom-tool",
+      "pin": {
+        "ref_type": "commit",
+        "ref_name": "v4.1.11",
+        "resolved_commit": "4091b7bcce1640c4db42b5fad63d7d1b7bc0e4cf",
+        "tag_object": null,
+        "acquisition_artifact_sha256": null
+      },
+      "license": {
+        "expression": "MIT",
+        "review_status": "PENDING_NAMED_REVIEW",
+        "evidence_paths": ["LICENSE"],
+        "evidence_hashes": {"LICENSE": null},
+        "content_scopes": [
+          {"scope": "repository-default", "expression": "MIT", "training_allowed": false, "raw_redistribution_allowed": true}
+        ]
+      },
+      "governance": {
+        "admission_status": "REGISTERED_PENDING_REVIEW",
+        "purposes": ["FORMAT_REGRESSION", "CROSS_TOOL_COMPARISON"],
+        "split": "DEV",
+        "acquisition_allowed": true,
+        "internal_development_allowed": false,
+        "training_allowed": false,
+        "evaluation_allowed": false,
+        "fixture_distribution_allowed": false,
+        "raw_redistribution_allowed": false,
+        "adapter_distribution_allowed": false,
+        "weight_distribution_allowed": false,
+        "redistribution_status": "CONDITIONAL_MIT_NOTICE",
+        "access_terms_status": "PUBLIC_GITHUB_TERMS_NOT_FROZEN",
+        "tdm_reservation_status": "NOT_ASSESSED_NOT_USED_FOR_TRAINING",
+        "submodules_status": "FORBIDDEN_NOT_ACQUIRED",
+        "lfs_status": "FORBIDDEN_NOT_ACQUIRED",
+        "generated_content_status": "NOT_ASSESSED",
+        "binary_content_status": "NOT_ASSESSED",
+        "attribution_status": "MIT_NOTICE_REQUIRED",
+        "acquisition_status": "REGISTERED_PENDING_ACQUISITION",
+        "rights_status": "AWAITING_LICENSE_EVIDENCE",
+        "usage_status": "NOT_ADMITTED",
+        "format_validation_status": "NOT_ASSESSED",
+        "release_status": "NOT_APPROVED",
+        "rights_decision_ref": null,
+        "rights_decision_sha256": null,
+        "revalidation_triggers": ["SOURCE_VERSION_CHANGE", "FIXTURE_SET_CHANGE", "LICENSE_CHANGE"],
+        "shipping_examples_allowed": false
+      },
+      "acquisition": {
+        "allow_submodules": false,
+        "execute_code": false,
+        "max_files": 50000,
+        "max_total_bytes": 1000000000
+      },
+      "notes": "样本量很小，仅用于兼容性和交叉输出。"
+    },
+    {
+      "dataset_id": "component-detection-fixtures-v7.1.10",
+      "root_id": "component-detection-fixtures-v7.1.10@bbd6ded3e7d07c14ca0f6db492529c0204d9b844",
+      "name": "Microsoft component-detection v7.1.10 fixtures",
+      "source_type": "git",
+      "upstream_url": "https://github.com/microsoft/component-detection.git",
+      "lineage_group": "microsoft-component-detection",
+      "pin": {
+        "ref_type": "commit",
+        "ref_name": "v7.1.10",
+        "resolved_commit": "bbd6ded3e7d07c14ca0f6db492529c0204d9b844",
+        "tag_object": null,
+        "acquisition_artifact_sha256": null
+      },
+      "license": {
+        "expression": "MIT; fixtures require third-party review",
+        "review_status": "CONDITIONAL_FIXTURE_REVIEW",
+        "evidence_paths": ["LICENSE"],
+        "evidence_hashes": {"LICENSE": null},
+        "content_scopes": [
+          {"scope": "project-code", "expression": "MIT", "training_allowed": false, "raw_redistribution_allowed": false},
+          {"scope": "third-party-fixtures", "expression": "PER_FILE_REVIEW", "training_allowed": false, "raw_redistribution_allowed": false}
+        ]
+      },
+      "governance": {
+        "admission_status": "REGISTERED_PENDING_REVIEW",
+        "purposes": ["DEV_EXTRACTOR", "ECOSYSTEM_REGRESSION"],
+        "split": "DEV",
+        "acquisition_allowed": true,
+        "internal_development_allowed": false,
+        "training_allowed": false,
+        "evaluation_allowed": false,
+        "fixture_distribution_allowed": false,
+        "raw_redistribution_allowed": false,
+        "adapter_distribution_allowed": false,
+        "weight_distribution_allowed": false,
+        "redistribution_status": "BLOCKED_PENDING_FIXTURE_REVIEW",
+        "access_terms_status": "PUBLIC_GITHUB_TERMS_NOT_FROZEN",
+        "tdm_reservation_status": "NOT_ASSESSED_NOT_USED_FOR_TRAINING",
+        "submodules_status": "FORBIDDEN_NOT_ACQUIRED",
+        "lfs_status": "FORBIDDEN_NOT_ACQUIRED",
+        "generated_content_status": "NOT_ASSESSED",
+        "binary_content_status": "THIRD_PARTY_FIXTURES_NOT_ASSESSED",
+        "attribution_status": "MIT_AND_THIRD_PARTY_NOTICE_REQUIRED",
+        "acquisition_status": "REGISTERED_PENDING_ACQUISITION",
+        "rights_status": "AWAITING_LICENSE_EVIDENCE",
+        "usage_status": "NOT_ADMITTED",
+        "format_validation_status": "NOT_ASSESSED",
+        "release_status": "NOT_APPROVED",
+        "rights_decision_ref": null,
+        "rights_decision_sha256": null,
+        "revalidation_triggers": ["SOURCE_VERSION_CHANGE", "FIXTURE_SET_CHANGE", "LICENSE_CHANGE"],
+        "shipping_examples_allowed": false
+      },
+      "acquisition": {
+        "allow_submodules": false,
+        "execute_code": false,
+        "max_files": 100000,
+        "max_total_bytes": 1000000000
+      },
+      "notes": "覆盖多生态，但仍是同一检测器的工具参考而非独立真值。"
+    },
+    {
+      "dataset_id": "cyclonedx-sbom-utility-fixtures-v1.0.1",
+      "root_id": "cyclonedx-sbom-utility-fixtures-v1.0.1@03880503c419fa383755742a701a0c42d7e788a1",
+      "name": "CycloneDX sbom-utility v1.0.1 fixtures",
+      "source_type": "git",
+      "upstream_url": "https://github.com/CycloneDX/sbom-utility.git",
+      "lineage_group": "cyclonedx-sbom-utility",
+      "pin": {
+        "ref_type": "commit",
+        "ref_name": "v1.0.1",
+        "resolved_commit": "03880503c419fa383755742a701a0c42d7e788a1",
+        "tag_object": null,
+        "acquisition_artifact_sha256": null
+      },
+      "license": {
+        "expression": "Apache-2.0",
+        "review_status": "PENDING_NAMED_REVIEW",
+        "evidence_paths": ["LICENSE"],
+        "evidence_hashes": {"LICENSE": null},
+        "content_scopes": [
+          {"scope": "repository-default", "expression": "Apache-2.0", "training_allowed": false, "raw_redistribution_allowed": true}
+        ]
+      },
+      "governance": {
+        "admission_status": "REGISTERED_PENDING_REVIEW",
+        "purposes": ["FORMAT_REGRESSION_CANDIDATE", "NEGATIVE_REGRESSION"],
+        "split": "DEV",
+        "acquisition_allowed": true,
+        "internal_development_allowed": false,
+        "training_allowed": false,
+        "evaluation_allowed": false,
+        "fixture_distribution_allowed": false,
+        "raw_redistribution_allowed": false,
+        "adapter_distribution_allowed": false,
+        "weight_distribution_allowed": false,
+        "redistribution_status": "CONDITIONAL_APACHE_NOTICE",
+        "access_terms_status": "PUBLIC_GITHUB_TERMS_NOT_FROZEN",
+        "tdm_reservation_status": "NOT_ASSESSED_NOT_USED_FOR_TRAINING",
+        "submodules_status": "FORBIDDEN_NOT_ACQUIRED",
+        "lfs_status": "FORBIDDEN_NOT_ACQUIRED",
+        "generated_content_status": "NOT_ASSESSED",
+        "binary_content_status": "NOT_ASSESSED",
+        "attribution_status": "APACHE_NOTICE_REQUIRED",
+        "acquisition_status": "REGISTERED_PENDING_ACQUISITION",
+        "rights_status": "AWAITING_LICENSE_EVIDENCE",
+        "usage_status": "NOT_ADMITTED",
+        "format_validation_status": "NOT_ASSESSED",
+        "release_status": "NOT_APPROVED",
+        "rights_decision_ref": null,
+        "rights_decision_sha256": null,
+        "revalidation_triggers": ["SOURCE_VERSION_CHANGE", "FIXTURE_SET_CHANGE", "LICENSE_CHANGE"],
+        "shipping_examples_allowed": false
+      },
+      "acquisition": {
+        "allow_submodules": false,
+        "execute_code": false,
+        "max_files": 50000,
+        "max_total_bytes": 1000000000
+      },
+      "notes": "分别记录 parse/schema/semantic/security 预期；完整性固定为 NOT_ASSESSED。"
+    },
+    {
+      "dataset_id": "spdx-tools-python-fixtures-v0.8.5",
+      "root_id": "spdx-tools-python-fixtures-v0.8.5@cef432adee09dbff2eedf7e33e4aa8be7c11ccfd",
+      "name": "SPDX tools-python v0.8.5 fixtures",
+      "source_type": "git",
+      "upstream_url": "https://github.com/spdx/tools-python.git",
+      "lineage_group": "spdx-tools-python",
+      "pin": {
+        "ref_type": "commit",
+        "ref_name": "v0.8.5",
+        "resolved_commit": "cef432adee09dbff2eedf7e33e4aa8be7c11ccfd",
+        "tag_object": null,
+        "acquisition_artifact_sha256": null
+      },
+      "license": {
+        "expression": "Apache-2.0",
+        "review_status": "PENDING_NAMED_REVIEW",
+        "evidence_paths": ["LICENSE"],
+        "evidence_hashes": {"LICENSE": null},
+        "content_scopes": [
+          {"scope": "repository-default", "expression": "Apache-2.0", "training_allowed": false, "raw_redistribution_allowed": true}
+        ]
+      },
+      "governance": {
+        "admission_status": "REGISTERED_PENDING_REVIEW",
+        "purposes": ["FORMAT_REGRESSION_CANDIDATE", "ENCODING_NEGATIVE_REGRESSION"],
+        "split": "DEV",
+        "acquisition_allowed": true,
+        "internal_development_allowed": false,
+        "training_allowed": false,
+        "evaluation_allowed": false,
+        "fixture_distribution_allowed": false,
+        "raw_redistribution_allowed": false,
+        "adapter_distribution_allowed": false,
+        "weight_distribution_allowed": false,
+        "redistribution_status": "CONDITIONAL_APACHE_NOTICE",
+        "access_terms_status": "PUBLIC_GITHUB_TERMS_NOT_FROZEN",
+        "tdm_reservation_status": "NOT_ASSESSED_NOT_USED_FOR_TRAINING",
+        "submodules_status": "FORBIDDEN_NOT_ACQUIRED",
+        "lfs_status": "FORBIDDEN_NOT_ACQUIRED",
+        "generated_content_status": "NOT_ASSESSED",
+        "binary_content_status": "NOT_ASSESSED",
+        "attribution_status": "APACHE_NOTICE_REQUIRED",
+        "acquisition_status": "REGISTERED_PENDING_ACQUISITION",
+        "rights_status": "AWAITING_LICENSE_EVIDENCE",
+        "usage_status": "NOT_ADMITTED",
+        "format_validation_status": "NOT_ASSESSED",
+        "release_status": "NOT_APPROVED",
+        "rights_decision_ref": null,
+        "rights_decision_sha256": null,
+        "revalidation_triggers": ["SOURCE_VERSION_CHANGE", "FIXTURE_SET_CHANGE", "LICENSE_CHANGE"],
+        "shipping_examples_allowed": false
+      },
+      "acquisition": {
+        "allow_submodules": false,
+        "execute_code": false,
+        "max_files": 50000,
+        "max_total_bytes": 500000000
+      },
+      "notes": "用于 SPDX 2.x 编码与坏输入；不作为 SPDX 3 唯一验证器。"
+    },
+    {
+      "dataset_id": "spdx-3-model-3.0.1",
+      "root_id": "spdx-3-model-3.0.1@a745f63e8643d5ae0f0851fcfa6836085308f80b",
+      "name": "SPDX 3 Model 3.0.1",
+      "source_type": "git",
+      "upstream_url": "https://github.com/spdx/spdx-3-model.git",
+      "lineage_group": "spdx-3-model",
+      "pin": {
+        "ref_type": "annotated_tag",
+        "ref_name": "3.0.1",
+        "resolved_commit": "a745f63e8643d5ae0f0851fcfa6836085308f80b",
+        "tag_object": "5878caae120aaab06e54a11b77884f9108e9d108",
+        "acquisition_artifact_sha256": null
+      },
+      "license": {
+        "expression": "Community-Spec-1.0; source code MIT where Section 4 applies",
+        "review_status": "LEGAL_REVIEW_REQUIRED",
+        "evidence_paths": ["License.md"],
+        "evidence_hashes": {"License.md": null},
+        "content_scopes": [
+          {"scope": "specification-model-material", "expression": "Community-Spec-1.0", "training_allowed": false, "raw_redistribution_allowed": false},
+          {"scope": "source-code-where-applicable", "expression": "MIT", "training_allowed": false, "raw_redistribution_allowed": false}
+        ]
+      },
+      "governance": {
+        "admission_status": "REGISTERED_PENDING_REVIEW",
+        "purposes": ["SPDX_3_VALIDATION_CLOSURE", "SCHEMA_VALIDATION"],
+        "split": "PUBLIC_REGRESSION",
+        "acquisition_allowed": true,
+        "internal_development_allowed": false,
+        "training_allowed": false,
+        "evaluation_allowed": false,
+        "fixture_distribution_allowed": false,
+        "raw_redistribution_allowed": false,
+        "adapter_distribution_allowed": false,
+        "weight_distribution_allowed": false,
+        "redistribution_status": "BLOCKED_PENDING_SCOPE_AND_ATTRIBUTION_REVIEW",
+        "access_terms_status": "PUBLIC_GITHUB_TERMS_NOT_FROZEN",
+        "tdm_reservation_status": "NOT_ASSESSED_NOT_USED_FOR_TRAINING",
+        "submodules_status": "FORBIDDEN_NOT_ACQUIRED",
+        "lfs_status": "FORBIDDEN_NOT_ACQUIRED",
+        "generated_content_status": "NOT_ASSESSED",
+        "binary_content_status": "NOT_ASSESSED",
+        "attribution_status": "NAME_VERSION_SOURCE_AND_LICENSE_REQUIRED",
+        "acquisition_status": "REGISTERED_PENDING_ACQUISITION",
+        "rights_status": "AWAITING_LICENSE_EVIDENCE",
+        "usage_status": "NOT_ADMITTED",
+        "format_validation_status": "NOT_ASSESSED",
+        "release_status": "NOT_APPROVED",
+        "rights_decision_ref": null,
+        "rights_decision_sha256": null,
+        "revalidation_triggers": ["SOURCE_VERSION_CHANGE", "MODEL_SCOPE_CHANGE", "LICENSE_CHANGE"],
+        "shipping_examples_allowed": false
+      },
+      "acquisition": {
+        "allow_submodules": false,
+        "execute_code": false,
+        "max_files": 50000,
+        "max_total_bytes": 500000000
+      },
+      "notes": "需冻结 JSON-LD context、SHACL、词汇表及引用闭包；禁止远程解析。"
+    },
+    {
+      "dataset_id": "spdx-spec-support-3.0",
+      "root_id": "spdx-spec-support-3.0@4b55ebcfdae5004b9f092ae93e712100004b7d84",
+      "name": "SPDX Specification support/3.0 snapshot",
+      "source_type": "git",
+      "upstream_url": "https://github.com/spdx/spdx-spec.git",
+      "lineage_group": "spdx-specification",
+      "pin": {
+        "ref_type": "commit",
+        "ref_name": "4b55ebcfdae5004b9f092ae93e712100004b7d84",
+        "resolved_commit": "4b55ebcfdae5004b9f092ae93e712100004b7d84",
+        "tag_object": null,
+        "acquisition_artifact_sha256": null
+      },
+      "license": {
+        "expression": "Community-Spec-1.0 AND CC-BY-3.0 AND MIT-scoped-script",
+        "review_status": "LEGAL_REVIEW_REQUIRED",
+        "evidence_paths": ["LICENSE"],
+        "evidence_hashes": {"LICENSE": null},
+        "content_scopes": [
+          {"scope": "current-specification", "expression": "Community-Spec-1.0", "training_allowed": false, "raw_redistribution_allowed": false},
+          {"scope": "pre-existing-specification-content", "expression": "CC-BY-3.0", "training_allowed": false, "raw_redistribution_allowed": false},
+          {"scope": "bin/pull-license-list.py", "expression": "MIT", "training_allowed": false, "raw_redistribution_allowed": false}
+        ]
+      },
+      "governance": {
+        "admission_status": "REGISTERED_PENDING_REVIEW",
+        "purposes": ["SPDX_3_SPEC_CONTROL", "VALIDATION_REFERENCE"],
+        "split": "PUBLIC_REGRESSION",
+        "acquisition_allowed": true,
+        "internal_development_allowed": false,
+        "training_allowed": false,
+        "evaluation_allowed": false,
+        "fixture_distribution_allowed": false,
+        "raw_redistribution_allowed": false,
+        "adapter_distribution_allowed": false,
+        "weight_distribution_allowed": false,
+        "redistribution_status": "BLOCKED_PENDING_SCOPE_AND_ATTRIBUTION_REVIEW",
+        "access_terms_status": "PUBLIC_GITHUB_TERMS_NOT_FROZEN",
+        "tdm_reservation_status": "NOT_ASSESSED_NOT_USED_FOR_TRAINING",
+        "submodules_status": "FORBIDDEN_NOT_ACQUIRED",
+        "lfs_status": "FORBIDDEN_NOT_ACQUIRED",
+        "generated_content_status": "NOT_ASSESSED",
+        "binary_content_status": "NOT_ASSESSED",
+        "attribution_status": "NAME_VERSION_SOURCE_AND_LICENSE_REQUIRED",
+        "acquisition_status": "REGISTERED_PENDING_ACQUISITION",
+        "rights_status": "AWAITING_LICENSE_EVIDENCE",
+        "usage_status": "NOT_ADMITTED",
+        "format_validation_status": "NOT_ASSESSED",
+        "release_status": "NOT_APPROVED",
+        "rights_decision_ref": null,
+        "rights_decision_sha256": null,
+        "revalidation_triggers": ["SOURCE_VERSION_CHANGE", "SPEC_SCOPE_CHANGE", "LICENSE_CHANGE"],
+        "shipping_examples_allowed": false
+      },
+      "acquisition": {
+        "allow_submodules": false,
+        "execute_code": false,
+        "max_files": 100000,
+        "max_total_bytes": 1000000000
+      },
+      "notes": "规范控制源；实现验证器正确性仍需独立结构/关系/SHACL 负例。"
+    }
+  ]
+}

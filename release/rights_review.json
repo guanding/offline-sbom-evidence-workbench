@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "overall_status": "PENDING_NAMED_REVIEW",
+  "release_target": "public-source-candidate",
+  "project_content_declaration": {
+    "declarant": "Ding Guan",
+    "declaration_date": "2026-08-17",
+    "status": "AUTHOR_DECLARED",
+    "scope": "All project-authored material included in the public-source candidate, including source code, documentation, schemas, datasets, synthetic examples, and test fixtures.",
+    "statement": "Independently authored by Ding Guan and contains no customer or third-party material. Third-party facts, names, trademarks, dependencies, tools, specifications, and separately governed inputs remain outside this declaration."
+  },
+  "items": [
+    {
+      "id": "project-source-code",
+      "included": true,
+      "status": "APPROVED",
+      "license_expression": "Apache-2.0",
+      "copyright_holder": "Ding Guan",
+      "decision_date": "2026-08-17",
+      "decision_scope": "All project-authored source code, documentation, schemas, datasets, synthetic examples, and test fixtures included in the public-source candidate are owned by Ding Guan and contain no customer or third-party material; excludes dependencies, tools, specifications, third-party facts, names, trademarks, and separately governed inputs.",
+      "required_action": "Preserve LICENSE and NOTICE in every source and binary distribution."
+    },
+    {
+      "id": "cyclonedx-vendored-specs",
+      "source_path": "vendor/specs/cyclonedx-1.7",
+      "included": false,
+      "status": "NOT_APPROVED",
+      "required_action": "Keep excluded or complete a named redistribution review."
+    },
+    {
+      "id": "spdx-vendored-specs",
+      "source_path": "vendor/specs/spdx-3.0.1",
+      "included": false,
+      "status": "NOT_APPROVED",
+      "required_action": "Keep excluded or complete a named redistribution review."
+    },
+    {
+      "id": "runtime-and-evidence",
+      "source_path": "runtime/ and evidence/",
+      "included": false,
+      "status": "NOT_INCLUDED",
+      "required_action": "Retain outside every public source and release artifact."
+    },
+    {
+      "id": "project-owned-release-assets",
+      "source_paths": [
+        "schemas/",
+        "datasets/",
+        "fixtures/synthetic_orion/"
+      ],
+      "included": true,
+      "status": "APPROVED",
+      "license_expression": "Apache-2.0",
+      "copyright_holder": "Ding Guan",
+      "decision_date": "2026-08-17",
+      "asset_manifest": "release/project_owned_assets.sha256",
+      "asset_manifest_sha256": "79804de3978dc0cc7cd08e06ce9e33d685c2fd07147bb5e2b5fc0cc9bbb22d49",
+      "decision_scope": "The exact listed bytes were confirmed as independently authored by Ding Guan and as containing no customer or third-party work. Apache-2.0 covers the project's original schemas, compilation, structure, selection, annotations, and synthetic fixture expression; it does not relicense referenced third-party facts, names, trademarks, source locations, tools, models, or artifacts.",
+      "required_action": "Preserve LICENSE and NOTICE in every source and binary distribution containing these assets."
+    },
+    {
+      "id": "python-build-and-actions-dependencies",
+      "included": true,
+      "status": "PENDING_LICENSE_REVIEW",
+      "required_action": "Review and approve uv.lock, requirements-ci.lock, the pinned setuptools backend, and the full-SHA GitHub Actions license and notice report for the exact release."
+    }
+  ],
+  "boundary": "This record is a review queue, not legal advice or release approval."
+}
