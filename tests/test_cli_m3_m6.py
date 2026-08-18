@@ -828,7 +828,16 @@ class CliM3M6Tests(unittest.TestCase):
             contextlib.redirect_stdout(stdout),
         ):
             self.assertEqual(main(self._selftest_arguments(output, receipt, registry)), 2)
-        self.assertIn("fixed macOS", stdout.getvalue())
+        payload = json.loads(stdout.getvalue())
+        self.assertEqual(payload["status"], "BLOCKED")
+        self.assertEqual(payload["error_type"], "SelfTestError")
+        self.assertIn(
+            payload["message"],
+            {
+                "trusted macOS sandbox-exec is unavailable",
+                "self-test requires the fixed macOS /usr/bin/sandbox-exec",
+            },
+        )
         run.assert_not_called()
 
     def test_euvd_handoff_and_selftest_recovery_commands(self) -> None:
