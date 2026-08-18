@@ -1,7 +1,16 @@
 {
   "schema_version": "1.0",
-  "overall_status": "PENDING_NAMED_REVIEW",
-  "release_target": "public-source-candidate",
+  "overall_status": "APPROVED_WITH_EXCLUSIONS",
+  "release_target": "public-source-repository",
+  "review_model": {
+    "mode": "SOLE_MAINTAINER_SELF_REVIEW",
+    "maintainer": "Ding Guan",
+    "github_login": "guanding",
+    "decision_date": "2026-08-18",
+    "independent_review_available": false,
+    "scope": "Public Git source visibility only.",
+    "assurance_boundary": "This is the copyright holder's self-declaration, not independent legal or security review and not artifact-release approval."
+  },
   "project_content_declaration": {
     "declarant": "Ding Guan",
     "declaration_date": "2026-08-17",
@@ -60,10 +69,23 @@
     },
     {
       "id": "python-build-and-actions-dependencies",
-      "included": true,
-      "status": "PENDING_LICENSE_REVIEW",
-      "required_action": "Review and approve uv.lock, requirements-ci.lock, the pinned setuptools backend, and the full-SHA GitHub Actions license and notice report for the exact release."
+      "included": false,
+      "referenced": true,
+      "status": "REFERENCED_NOT_DISTRIBUTED",
+      "decision_scope": "The public Git source records dependency names, versions, hashes, the pinned build backend, and full-SHA Actions references, but does not vendor or publish those dependency distributions.",
+      "required_action": "Complete the authoritative license, notice, compatibility, source-obligation, and exact-artifact review before distributing a wheel, sdist, or GitHub Release."
     }
   ],
-  "boundary": "This record is a review queue, not legal advice or release approval."
+  "artifact_distribution": {
+    "github_release": "BLOCKED_NOT_OFFERED",
+    "wheel": "BLOCKED_NOT_OFFERED",
+    "sdist": "BLOCKED_NOT_OFFERED",
+    "blocking_reasons": [
+      "ARTIFACT_LICENSE_AND_NOTICE_REVIEW_PENDING",
+      "CONTROLLED_ZERO_SKIP_RELEASE_RUN_PENDING",
+      "SIGNED_PROVENANCE_PENDING",
+      "SUPPORTED_PLATFORM_RELEASE_VALIDATION_PENDING"
+    ]
+  },
+  "boundary": "Approves public visibility of the allowlisted project source only. It is not legal advice, independent review, artifact distribution approval, customer evidence, or a conformity decision."
 }

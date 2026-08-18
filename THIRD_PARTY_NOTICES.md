@@ -1,10 +1,12 @@
-# Third-party material register — draft
+# Third-party material register
 
-**Third-party release status: NOT APPROVED FOR PUBLIC DISTRIBUTION.**
+**Source repository status: APPROVED WITH EXCLUSIONS. Artifact distribution
+status: BLOCKED / NOT OFFERED.**
 
-This file is a release-preparation register. It is not a license grant, legal
-opinion, compatibility decision, or authorization to redistribute any item.
-Every entry requires named rights review against the exact release bytes.
+This register distinguishes public Git source from separately distributed
+dependencies, packages, and other artifacts. It is not a license grant, legal
+opinion, compatibility decision, or authorization to redistribute an external
+item.
 
 ## Project-owned material
 
@@ -42,16 +44,16 @@ The authoritative local status remains the per-artifact
 
 | Artifact | Candidate license field | Current distribution status |
 | --- | --- | --- |
-| CycloneDX 1.7 JSON Schema | `Apache-2.0` candidate | `NOT_APPROVED`; named review pending |
-| SPDX 3.0.1 JSON Schema | `LICENSE_REVIEW_REQUIRED` | `NOT_APPROVED`; named review pending |
-| SPDX 3.0.1 JSON-LD context | `LICENSE_REVIEW_REQUIRED` | `NOT_APPROVED`; named review pending |
-| SPDX 3.0.1 ontology/SHACL model | `LICENSE_REVIEW_REQUIRED` | `NOT_APPROVED`; named review pending |
+| CycloneDX 1.7 JSON Schema | `Apache-2.0` candidate | `NOT_APPROVED`; excluded from public source and artifacts |
+| SPDX 3.0.1 JSON Schema | `LICENSE_REVIEW_REQUIRED` | `NOT_APPROVED`; excluded from public source and artifacts |
+| SPDX 3.0.1 JSON-LD context | `LICENSE_REVIEW_REQUIRED` | `NOT_APPROVED`; excluded from public source and artifacts |
+| SPDX 3.0.1 ontology/SHACL model | `LICENSE_REVIEW_REQUIRED` | `NOT_APPROVED`; excluded from public source and artifacts |
 
 Technical identity, a source URL, or a matching SHA-256 does not grant
 redistribution permission. These files must be removed from public artifacts,
 acquired separately at installation/runtime under approved terms, or released
-only after the rightsholder and notice obligations are documented by a named
-reviewer.
+only after the rightsholder and notice obligations are documented for the exact
+artifact.
 
 ## Evidence, datasets, fixtures, manuals, and tools
 
@@ -78,4 +80,4 @@ Before changing this status, attach to the fixed release commit:
 2. authoritative license texts and required notices;
 3. a compatibility/obligations review;
 4. a source and rights decision for every vendored spec and tracked asset;
-5. the name, date, and scope of the approving rights reviewer.
+5. the maintainer, date, scope, review model, and exact approved hashes.

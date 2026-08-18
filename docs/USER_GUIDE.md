@@ -1,8 +1,9 @@
 # Public user guide
 
-This guide covers the public-source candidate of Offline SBOM Evidence
-Workbench. The current candidate is an engineering RC, not a released package,
-customer evidence, a manufacturer-approved SBOM, or a conformity decision.
+This guide covers the public source preview of Offline SBOM Evidence Workbench.
+The current commit is an unreleased engineering RC, not a GitHub Release,
+supported package, customer evidence, manufacturer-approved SBOM, or conformity
+decision.
 
 ## Supported lane
 
@@ -16,7 +17,7 @@ network-denial and controlled acquisition helpers are currently macOS-specific.
 ## Clean-clone synthetic demonstration
 
 ```bash
-git clone <repository-url> offline-sbom-evidence-workbench
+git clone https://github.com/guanding/offline-sbom-evidence-workbench.git
 cd offline-sbom-evidence-workbench
 uv sync --frozen
 ./scripts/build_demo.sh
@@ -80,9 +81,10 @@ export SBOM_WORKBENCH_PRO03B_TEMPLATE=/absolute/path/to/reviewed/template.xlsx
 
 ## Release boundary
 
-Before publishing, complete [`../PUBLIC_RELEASE_CHECKLIST.md`](../PUBLIC_RELEASE_CHECKLIST.md)
-for one fixed commit and artifact set. In particular, close the OSS license and
-third-party rights decisions, run the controlled zero-skip lane, enable the
-GitHub security gates, reproduce the package on each supported platform, and
-obtain independent review. CI, hashes, an SBOM, or a signature alone do not
-authorize release or customer delivery.
+Public Git source visibility and artifact distribution are separate lanes; see
+[`../PUBLIC_RELEASE_CHECKLIST.md`](../PUBLIC_RELEASE_CHECKLIST.md). The current
+repository does not offer a GitHub Release, wheel, or sdist. Before any future
+artifact distribution, close the dependency and vendored-spec rights decisions,
+run the controlled zero-skip lane, reproduce the package on each supported
+platform, and authorize the exact hashes. CI, hashes, an SBOM, or a signature
+alone do not authorize artifact distribution or customer delivery.
