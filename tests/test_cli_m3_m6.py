@@ -977,6 +977,7 @@ class CliM3M6Tests(unittest.TestCase):
                 0,
             )
         self.assertNotIn(secret, stdout.getvalue())
+        self.assertNotIn(secret, output.read_text(encoding="utf-8"))
         report = json.loads(stdout.getvalue())
         self.assertFalse(report["api_key_captured"])
         self.assertEqual(report["decision"], "SHADOW_ONLY_HOLD")
