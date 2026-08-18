@@ -79,8 +79,22 @@ class ResourceResolutionTests(unittest.TestCase):
             for item in review["items"]
             if item["id"] == "python-build-and-actions-dependencies"
         )
-        self.assertEqual(review["overall_status"], "PENDING_NAMED_REVIEW")
-        self.assertEqual(dependency_review["status"], "PENDING_LICENSE_REVIEW")
+        self.assertEqual(review["overall_status"], "APPROVED_WITH_EXCLUSIONS")
+        self.assertEqual(
+            review["review_model"]["mode"],
+            "SOLE_MAINTAINER_SELF_REVIEW",
+        )
+        self.assertFalse(review["review_model"]["independent_review_available"])
+        self.assertFalse(dependency_review["included"])
+        self.assertTrue(dependency_review["referenced"])
+        self.assertEqual(
+            dependency_review["status"],
+            "REFERENCED_NOT_DISTRIBUTED",
+        )
+        self.assertEqual(
+            review["artifact_distribution"]["wheel"],
+            "BLOCKED_NOT_OFFERED",
+        )
         with tempfile.TemporaryDirectory() as directory_name:
             candidate = Path(directory_name)
             for name in (

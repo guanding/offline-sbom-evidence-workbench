@@ -4,6 +4,14 @@
 
 当前发布候选为 **`0.5.0-rc.1`**；Python/wheel 元数据按 PEP 440 规范化显示为 `0.5.0rc1`。
 
+## 发布状态
+
+本仓库是 Apache-2.0 的**公开源码预览（unreleased RC）**：
+<https://github.com/guanding/offline-sbom-evidence-workbench>。当前不提供
+GitHub Release、wheel、sdist、容器镜像或支持 SLA。CI 中构建 wheel/sdist
+仅用于验证，不上传制品。依赖名称、版本与哈希是构建声明，不表示仓库捆绑或
+再授权相应第三方制品。源码公开不构成客户交付、CRA 符合性、认证或法律意见。
+
 ## 开源许可证
 
 由 Ding Guan 享有版权的项目源代码、文档，以及公开候选中的 `schemas/`、
@@ -60,7 +68,7 @@
 ## 立即运行
 
 ```bash
-git clone <repository-url> offline-sbom-evidence-workbench
+git clone https://github.com/guanding/offline-sbom-evidence-workbench.git
 cd offline-sbom-evidence-workbench
 uv sync --frozen
 ./scripts/build_demo.sh
