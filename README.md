@@ -2,15 +2,7 @@
 
 离线、证据驱动的 SBOM 工作台。在没有客户源码的前提下，系统已经跑通项目自有合成样本、Yocto 官方公开构建，以及用户指定 `euvd-sbom-matcher` v2.3.0 的 M3A→M6A 本地工程自测。确定性证据链始终是主流程；Qwen/Gemma 只在最小冲突卡旁路做 shadow 评估。
 
-当前发布候选为 **`0.5.0-rc.1`**；Python/wheel 元数据按 PEP 440 规范化显示为 `0.5.0rc1`。
-
-## 发布状态
-
-本仓库是 Apache-2.0 的**公开源码预览（unreleased RC）**：
-<https://github.com/guanding/offline-sbom-evidence-workbench>。当前不提供
-GitHub Release、wheel、sdist、容器镜像或支持 SLA。CI 中构建 wheel/sdist
-仅用于验证，不上传制品。依赖名称、版本与哈希是构建声明，不表示仓库捆绑或
-再授权相应第三方制品。源码公开不构成客户交付、CRA 符合性、认证或法律意见。
+当前发布候选为 **`0.6.0-rc.1`**；Python/wheel 元数据按 PEP 440 规范化显示为 `0.6.0rc1`。
 
 ## 开源许可证
 
@@ -48,6 +40,18 @@ GitHub Release、wheel、sdist、容器镜像或支持 SLA。CI 中构建 wheel/
 
 这些结果同样标为 `SELF_TEST_NOT_CUSTOMER_EVIDENCE`。in-toto 信封 + cosign 签名是 non-repudiation 增强，**不外推**为 release / CRA / prEN-7 / CAB；签名是增强不是阻断（unsigned pack 仍 valid）。M9 import 证据是 AUXILIARY 观测，不修补 SBOM（syft catalogue 仍权威）。
 
+## 2026-08-20：source-only 独立组件总体与逐项对账
+
+- `scan-source-only` 现在额外生成哈希绑定的 `component-population.json`；总体只从冻结 source exact-set 内的 Go、Cargo、Maven、Gradle、Bazel、npm/pnpm、Composer、Ruby/Bundler、SwiftPM、.NET（含 NuGet Central Package Management）、west、ESP-IDF、Python 与 C/C++ 声明确定性派生，不把缺项写回 CycloneDX。
+- GitHub 源码可通过 `--source-acquisition-receipt` 与目录外保存的 `--trusted-source-acquisition-receipt-sha256` 绑定受控获取回执；工具会逐文件复核 acquisition tree 与本次 source exact-set。该绑定证明的是来源身份和当前字节一致，不代表权利批准、发布制品或组件完整性。
+- 每项区分 `PROJECT_COMPONENT`、`DECLARED_DEPENDENCY`、`RESOLVED_COMPONENT`，保留 runtime/development/build/test/platform 等 scope；pnpm/Cargo/Composer 等已解析锁定版本按版本独立对账，跨生态同名不能互相匹配。
+- `HOLD_UNMATCHED_DECLARATIONS`、`HOLD_AMBIGUOUS_MATCHES`、`HOLD_DISCOVERY_INCOMPLETE` 均阻断 release-quality handoff。即使零缺口也只到 `OPEN_REVIEW_SINGLE_SOURCE_DECLARATION_SCOPE`，因为源码声明单面不能证明发布产品总体完整。
+- `--build-id` 与 `--release-artifact-sha256` 必须同时提供；未提供会显式记录 `SOURCE_ONLY_NO_BUILD_OR_RELEASE_ARTIFACT_BINDING`，不会自动假设源码快照就是发布制品。
+- 七仓库 r10 真实复扫形成 992 个独立总体项：922 匹配、64 未匹配、6 歧义；七项全部为 HOLD。原本只看 Syft 总数会显示 `OPEN_REVIEW` 的 Node/Rust 也暴露了内部 workspace 组件缺失。
+- 详细设计、逐仓结果与机器可读锚保留在内部自测证据中；这些 GitHub 扫描矩阵和本地模型运行观测不进入公共候选包、wheel 或 sdist。
+
+上述总体仍是 `AUXILIARY_NOT_SBOM`，七仓库输出仍是 `SELF_TEST_NOT_CUSTOMER_EVIDENCE`。它改进的是缺口可见性和证据绑定，不是 PRE-7/CRA 符合性判定、客户交付批准或认证。
+
 ## 当前交付状态
 
 - Release A、Release B：`RECONCILIATION_CLOSED`，生成两种 SBOM 和不可覆盖的证据包；
@@ -61,6 +65,7 @@ GitHub Release、wheel、sdist、容器镜像或支持 SLA。CI 中构建 wheel/
 - M7：sealed pack 含 in-toto ITE-6 信封；cosign 离线签名框架（allowlist+denylist，强制 `--tlog-upload=false`）；scan-source-only 单面 CycloneDX 1.7 退路。cosign 3.1.2 已有本机 hash-pinned 获取与往返观察，但二进制和本机回执不进入公开 Python 制品，换机必须重新受控获取。
 - M8：VEX 可信声明摄取（CycloneDX VEX + OpenVEX 双格式 + issuer allowlist）；命中收窄回流 lane（isolated-intake，单向 EUVD→工作台，最严胜出）；purl qualifier-aware 规范化。
 - M9：source-only 0 组件 Python 项目告警；import 证据采集（apparent_gaps，AUXILIARY）。
+- source-only 组件总体：声明/锁文件独立总体 + 版本感知逐项对账 + build/artifact 成对绑定；七生态真实样本全部保持 HOLD。
 - 真实平台验证：EUVD v2.3.1 真实 50 命中 → 1 VEX 收窄 + 49 保留，fail-closed 不变量全过。
 
 合成结果标为 `SYNTHETIC_ENGINEERING_PASS_WITH_DECLARED_SCOPE`；公开 Yocto 结果标为 `PUBLIC_BUILD_REFERENCE_PIPELINE_PASS_OPEN_CANDIDATE`。后者证明真实公开制品的处理机制可运行，但仍不是客户产品证据、制造商 SBOM、ground truth、PRE-7/CRA 符合性结论、CAB 结论或认证。
@@ -68,7 +73,7 @@ GitHub Release、wheel、sdist、容器镜像或支持 SLA。CI 中构建 wheel/
 ## 立即运行
 
 ```bash
-git clone https://github.com/guanding/offline-sbom-evidence-workbench.git
+git clone <repository-url> offline-sbom-evidence-workbench
 cd offline-sbom-evidence-workbench
 uv sync --frozen
 ./scripts/build_demo.sh
@@ -76,6 +81,34 @@ uv sync --frozen
 ```
 
 最后一条命令会显示带随机 fragment token 的本地 URL。服务仅绑定 `127.0.0.1`，并启用 Host/Origin、会话令牌、CSRF 和 DNS-rebinding 防护。
+
+### 图形化生成 SBOM
+
+在 macOS Apple Silicon 源码 checkout 中，首次使用先受控获取并核验固定的
+Syft 1.50.0；这是唯一需要联网的步骤：
+
+```bash
+./scripts/acquire_syft_m3a.sh
+```
+
+随后可在不准备历史证据目录的情况下离线启动生成界面：
+
+```bash
+uv run --offline sbom-workbench serve --port 8765
+```
+
+只打开终端显示的完整 fragment-token URL。在“生成 SBOM”页声明项目名称与版本，
+选择文件或文件夹，并选择默认格式。扫描完成后可下载 CycloneDX JSON、SPDX JSON、
+Syft JSON 以及绑定 raw/projected 哈希和验证门状态的 scan receipt。浏览器只提交相对路径
+和所选文件字节，不接受任意主机路径；会话临时数据在用户清除或服务关闭时移除。
+
+该入口是 source-only 单面候选：文件选择不保留符号链接、硬链接身份、所有权或可执行位；
+`VALID_WITH_COVERAGE_HOLD` 仍阻断 release-quality handoff。正式交付前仍需补齐发布制品/构建
+绑定、独立组件总体、隐私与权利审查及制造商授权。
+
+公共 wheel 不携带 Syft 二进制。安装态使用外部受控 Syft 时，必须同时显式提供
+`--syft-bin`、`--syft-config` 和 `--syft-receipt`；不得只替换其中一项。完整参数与限制见
+[公开用户指南](docs/USER_GUIDE.md)。
 
 直接查看本次 M3A/M4A 结果：
 
@@ -102,21 +135,23 @@ cd /path/to/offline-sbom-evidence-workbench
 验证全部回归：
 
 ```bash
-SBOM_WORKBENCH_REQUIRE_LOOPBACK_TESTS=1 PYTHONDONTWRITEBYTECODE=1 \
-  uv run --offline python -B release/run_public_tests.py
+sh scripts/test_public_source.sh
 ```
 
-当前源码树发现 **323 项** `unittest`。受控发布验证必须在可绑定 loopback
-的主机设置 `SBOM_WORKBENCH_REQUIRE_LOOPBACK_TESTS=1`，提供经审核的 BYO
-CycloneDX/SPDX specs、受控 PRO-03B fixture 以及本次构建的 wheel/sdist，并做到
-**323 项通过、0 项跳过**。本地已按这一路径验证当前 RC。
+当前源码树与显式 allowlist 公共候选均发现 **383 项** `unittest`。上述
+隔离脚本在候选目录外创建临时虚拟环境，并在候选测试前后验证 exact-set，避免
+`uv` 构建元数据改变被测对象。其内部的 `run_public_tests.py` 是公开源码边界门：
+必须在可绑定 loopback 的主机精确得到 **383 项 OK、20 项预期跳过**。
+本地已按这一路径验证当前 RC 候选。
 
 显式 allowlist 生成的公开源码候选不携带权利受限材料，因此当前会明确跳过
 20 项：6 项外部 PRO-03B fixture、2 项构建制品 smoke、11 项 BYO specs
 验证，以及 1 项不随公开候选分发的历史 acquisition receipt。这里的 skip 只说明
-边界按预期故障关闭，不能替代上述零跳过发布验证。另需执行
+边界按预期故障关闭，不是零跳过发布验证。需要 release-quality 全面验证时，应另在
+受控环境提供经审核的 BYO CycloneDX/SPDX specs、PRO-03B fixture 及本次 wheel/sdist，
+直接重跑全量套件并要求 383 项、0 项跳过；本轮没有这些外部受控输入。另需执行
 `sh scripts/test_built_artifacts.sh`；该脚本在临时目录构建 wheel/sdist、安装 wheel、
-核对公开资源并拒绝 `vendor/specs` 混入。受限沙箱若禁止 loopback bind，9 项 Web
+核对公开资源并拒绝 `vendor/specs` 混入。受限沙箱若禁止 loopback bind，16 项 Web
 安全测试还会以明确原因跳过，该环境不得用于正式放行。
 
 ## 安装制品、BYO specs 与平台边界
@@ -125,6 +160,23 @@ CycloneDX/SPDX specs、受控 PRO-03B fixture 以及本次构建的 wheel/sdist�
 - `vendor/specs/` 中冻结的 CycloneDX/SPDX 副本当前分发权利为 `NOT_APPROVED`，因此**不会**进入公开 wheel/sdist。安装态执行格式验证前，必须由操作者审核并提供 BYO 目录：`export SBOM_WORKBENCH_VENDOR_SPECS_ROOT=/path/to/reviewed/specs`。缺失、哈希不符或不安全路径均故障关闭；hash PASS 不产生权利或合规批准。
 - 包元数据当前仅声明 CPython `3.12.x` 与 POSIX。核心合成/离线处理路径可在 POSIX 上运行；M3/M4 Syft 网络拒绝自测依赖 macOS `/usr/bin/sandbox-exec`，受控 Syft/cosign 获取脚本当前固定 Darwin ARM64。Windows 未支持，Linux 全链发布验证尚未完成。
 - 冻结或扫描 EUVD 时，活动源码树必须通过 `--active-source-root` 或 `SBOM_WORKBENCH_EUVD_SOURCE_ROOT` 显式配置；未配置即故障关闭。外部 PRO-03B 回归 fixture 仅通过 `SBOM_WORKBENCH_PRO03B_TEMPLATE` 注入，不随公开制品分发。
+
+## EUVD 周期重扫交接（Phase 1）
+
+`prepare-euvd-handoff` 现在生成 schema `1.1` 的 no-overwrite receipt，并明确绑定：
+
+- `monitoring_purpose=PERIODIC_COMPONENT_RESCAN_CANDIDATE_ONLY`；
+- `automatic_vulnerability_confirmation=false`；
+- `version_applicability_boundary=MANUAL_REVIEW_REQUIRED`；
+- `direction=SBOM_TO_EUVD_ONLY` 且禁止反向事实写入。
+
+对应 EUVD Web intake 校验该 1.1 receipt 后会强制启用 candidate-only
+模式，即使匹配规则原本可产生 confirmed 结果，也降级为“需复核”。
+EUVD Local Mirror 同样可直接从无 `vulnerabilities[]` 的纯 CycloneDX
+`components[]` 发射组件观测，并读取 name、PURL、顶层 CPE 与
+`properties[].syft:cpe23`。结果只形成监测候选；产品包含性、版本适用性、VEX、
+积极利用或严重事件触发仍由制造商程序人工判断。工具不硬编码日/周/月频率；复扫
+周期、事件触发条件和保留期应由客户的漏洞处理政策与产品风险确定并留下记录。
 
 验证已生成的证据包：
 

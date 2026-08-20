@@ -11,6 +11,7 @@ import re
 import secrets
 import stat
 import sys
+import tempfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -21,6 +22,17 @@ from .model import (
     ModelDisabledError,
     OmlxModelAdapter,
     build_minimal_conflict_card,
+)
+from .web_scan import (
+    MAX_DOWNLOAD_BYTES,
+    MAX_INTAKE_JSON_BYTES,
+    DownloadArtifact,
+    ScanJobStore,
+    ScannerBackend,
+    SubprocessScanner,
+    WebScanError,
+    artifact_digest_header,
+    discover_scanner_runtime,
 )
 
 
@@ -37,6 +49,12 @@ _SAFE_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:@+_-]{0,255}")
 _RUN_ROUTE = re.compile(r"/api/runs/([A-Za-z0-9][A-Za-z0-9._:@+_-]{0,255})")
 _MODEL_ROUTE = re.compile(
     r"/api/runs/([A-Za-z0-9][A-Za-z0-9._:@+_-]{0,255})/model-advice"
+)
+_INTAKE_ROUTE = re.compile(r"/api/intakes/([0-9a-f]{24})")
+_INTAKE_COMPLETE_ROUTE = re.compile(r"/api/intakes/([0-9a-f]{24})/complete")
+_INTAKE_FILE_ROUTE = re.compile(r"/api/intakes/([0-9a-f]{24})/files/([0-9]{1,5})")
+_INTAKE_DOWNLOAD_ROUTE = re.compile(
+    r"/api/intakes/([0-9a-f]{24})/downloads/(cyclonedx-json|spdx-json|syft-json|scan-receipt)"
 )
 _REGISTRY_KEYS = {"schema_version", "runs"}
 _RUN_ENTRY_KEYS = {"run_id", "relative_path", "dashboard_sha256"}
@@ -145,7 +163,11 @@ def _read_regular_file(path: Path, *, maximum: int, label: str) -> bytes:
 class RegisteredRunStore:
     """Read only a startup-frozen list of hash-bound run dashboards."""
 
-    def __init__(self, data_root: Path) -> None:
+    def __init__(self, data_root: Path | None) -> None:
+        if data_root is None:
+            self.root: Path | None = None
+            self._entries: dict[str, dict[str, str]] = {}
+            return
         candidate = Path(data_root)
         if candidate.is_symlink():
             raise WebAppError(500, "UNSAFE_DATA_ROOT", "data_root must not be a symlink")
@@ -158,6 +180,8 @@ class RegisteredRunStore:
         self._entries = self._load_registry()
 
     def _load_registry(self) -> dict[str, dict[str, str]]:
+        if self.root is None:
+            return {}
         registry_path = self.root / REGISTRY_FILENAME
         payload = _read_regular_file(
             registry_path,
@@ -199,6 +223,12 @@ class RegisteredRunStore:
         return entries
 
     def _registered_run_directory(self, entry: dict[str, str]) -> Path:
+        if self.root is None:
+            raise WebAppError(
+                500,
+                "REGISTERED_DATA_UNAVAILABLE",
+                "no registered evidence data root is configured",
+            )
         current = self.root
         for part in PurePosixPath(entry["relative_path"]).parts:
             current = current / part
@@ -364,6 +394,7 @@ class WorkbenchHTTPServer(ThreadingHTTPServer):
         server_address: tuple[str, int],
         store: RegisteredRunStore,
         model_adapter: OmlxModelAdapter,
+        scanner_backend: ScannerBackend | None = None,
     ) -> None:
         host, _ = server_address
         if host != DEFAULT_HOST:
@@ -373,7 +404,22 @@ class WorkbenchHTTPServer(ThreadingHTTPServer):
         self.session_token = secrets.token_urlsafe(32)
         self.csrf_token = secrets.token_urlsafe(32)
         self.static_root = Path(__file__).resolve().parent / "static"
+        # ``TCPServer.__init__`` calls our ``server_close`` override if bind
+        # fails, so the cleanup guard must be safe before the base constructor.
+        self._scan_store_closed = True
         super().__init__(server_address, WorkbenchRequestHandler)
+        try:
+            self._scan_temporary = tempfile.TemporaryDirectory(prefix="sbom-workbench-ui-")
+            self.scan_store = ScanJobStore(
+                Path(self._scan_temporary.name) / "jobs",
+                scanner_backend,
+            )
+            self._scan_store_closed = False
+        except Exception:
+            if hasattr(self, "_scan_temporary"):
+                self._scan_temporary.cleanup()
+            super().server_close()
+            raise
         port = self.server_address[1]
         self.allowed_hosts = frozenset({f"127.0.0.1:{port}", f"localhost:{port}"})
         self.allowed_origins = frozenset(
@@ -381,6 +427,15 @@ class WorkbenchHTTPServer(ThreadingHTTPServer):
         )
         # URL fragments are never sent in the HTTP request target or Referer.
         self.launch_url = f"http://127.0.0.1:{port}/#token={quote(self.session_token)}"
+
+    def server_close(self) -> None:
+        if not self._scan_store_closed:
+            self._scan_store_closed = True
+            try:
+                self.scan_store.shutdown()
+            finally:
+                self._scan_temporary.cleanup()
+        super().server_close()
 
 
 class WorkbenchRequestHandler(BaseHTTPRequestHandler):
@@ -458,6 +513,61 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
             head_only=head_only,
         )
 
+    def _scan_error(self, error: WebScanError, *, head_only: bool = False) -> None:
+        self._error(
+            WebAppError(error.status, error.code, error.message),
+            head_only=head_only,
+        )
+
+    def _send_artifact(self, artifact: DownloadArtifact, *, head_only: bool) -> None:
+        flags = os.O_RDONLY
+        if hasattr(os, "O_NOFOLLOW"):
+            flags |= os.O_NOFOLLOW
+        try:
+            descriptor = os.open(artifact.path, flags)
+        except OSError as exc:
+            raise WebAppError(409, "ARTIFACT_DRIFT", "download artifact is unavailable") from exc
+        try:
+            info = os.fstat(descriptor)
+            if (
+                not stat.S_ISREG(info.st_mode)
+                or info.st_nlink != 1
+                or info.st_size != artifact.size
+                or info.st_size > MAX_DOWNLOAD_BYTES
+            ):
+                raise WebAppError(409, "ARTIFACT_DRIFT", "download artifact metadata changed")
+            digest = hashlib.sha256()
+            remaining = artifact.size
+            while remaining:
+                chunk = os.read(descriptor, min(1024 * 1024, remaining))
+                if not chunk:
+                    raise WebAppError(409, "ARTIFACT_DRIFT", "download artifact was truncated")
+                digest.update(chunk)
+                remaining -= len(chunk)
+            if digest.hexdigest() != artifact.sha256:
+                raise WebAppError(409, "ARTIFACT_DRIFT", "download artifact hash changed")
+            os.lseek(descriptor, 0, os.SEEK_SET)
+            self.send_response(200)
+            self._security_headers()
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(artifact.size))
+            self.send_header("Content-Disposition", f'attachment; filename="{artifact.filename}"')
+            self.send_header("Digest", artifact_digest_header(artifact))
+            self.send_header("X-Content-SHA256", artifact.sha256)
+            self.send_header("Connection", "close")
+            self.end_headers()
+            if not head_only:
+                remaining = artifact.size
+                while remaining:
+                    chunk = os.read(descriptor, min(1024 * 1024, remaining))
+                    if not chunk:
+                        raise WebAppError(409, "ARTIFACT_DRIFT", "download artifact was truncated")
+                    self.wfile.write(chunk)
+                    remaining -= len(chunk)
+        finally:
+            os.close(descriptor)
+        self.close_connection = True
+
     def _single_header(self, name: str) -> str | None:
         values = self.headers.get_all(name, [])
         if len(values) > 1:
@@ -525,6 +635,9 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
             if path == "/static/style.css":
                 self._static("style.css", "text/css; charset=utf-8", head_only=head_only)
                 return
+            if path == "/static/favicon.svg":
+                self._static("favicon.svg", "image/svg+xml", head_only=head_only)
+                return
             self._require_session()
             if path == "/api/session":
                 self._json(
@@ -533,6 +646,7 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
                         "status": "LOCAL_SESSION_ACTIVE",
                         "csrf_token": self.app.csrf_token,
                         "model": self.app.model_adapter.status(),
+                        "scanner": self.app.scan_store.scanner_status(),
                         "authority_boundary": (
                             "No UI or model action grants manufacturer, CAB, conformity, or release authority."
                         ),
@@ -551,18 +665,33 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
             if match:
                 self._json(200, self.app.store.get_run(match.group(1)), head_only=head_only)
                 return
+            match = _INTAKE_ROUTE.fullmatch(path)
+            if match:
+                self._json(
+                    200,
+                    self.app.scan_store.public(match.group(1)),
+                    head_only=head_only,
+                )
+                return
+            match = _INTAKE_DOWNLOAD_ROUTE.fullmatch(path)
+            if match:
+                artifact = self.app.scan_store.artifact(match.group(1), match.group(2))
+                self._send_artifact(artifact, head_only=head_only)
+                return
             raise WebAppError(404, "NOT_FOUND", "resource was not found")
+        except WebScanError as error:
+            self._scan_error(error, head_only=head_only)
         except WebAppError as error:
             self._error(error, head_only=head_only)
 
-    def _read_request_json(self) -> dict[str, Any]:
+    def _read_request_json(self, *, maximum: int = MAX_REQUEST_BYTES) -> dict[str, Any]:
         if self._single_header("Transfer-Encoding") is not None:
             raise WebAppError(400, "TRANSFER_ENCODING_BLOCKED", "chunked request bodies are forbidden")
         raw_length = self._single_header("Content-Length")
         if raw_length is None or not raw_length.isascii() or not raw_length.isdigit():
             raise WebAppError(411, "CONTENT_LENGTH_REQUIRED", "bounded Content-Length is required")
         length = int(raw_length)
-        if length < 1 or length > MAX_REQUEST_BYTES:
+        if length < 1 or length > maximum:
             raise WebAppError(413, "REQUEST_TOO_LARGE", "request body exceeds its byte limit")
         content_type = self._single_header("Content-Type")
         if content_type is None or content_type.split(";", 1)[0].strip().lower() != "application/json":
@@ -589,6 +718,17 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
             path, query = self._request_path()
             if query:
                 raise WebAppError(400, "QUERY_BLOCKED", "query parameters are not accepted")
+            if path == "/api/intakes":
+                body = self._read_request_json(maximum=MAX_INTAKE_JSON_BYTES)
+                self._json(201, self.app.scan_store.create(body))
+                return
+            complete_match = _INTAKE_COMPLETE_ROUTE.fullmatch(path)
+            if complete_match:
+                body = self._read_request_json()
+                if body:
+                    raise WebAppError(400, "INVALID_REQUEST", "complete request must be empty")
+                self._json(202, self.app.scan_store.start(complete_match.group(1)))
+                return
             match = _MODEL_ROUTE.fullmatch(path)
             if match is None:
                 raise WebAppError(404, "NOT_FOUND", "write endpoint was not found")
@@ -599,10 +739,78 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
             card = build_minimal_conflict_card(match.group(1), conflict)
             result = self.app.model_adapter.advise(card)
             self._json(200, result)
+        except WebScanError as error:
+            self._scan_error(error)
         except ModelDisabledError as exc:
             self._error(WebAppError(409, "MODEL_DISABLED", str(exc)))
         except ModelAdapterError as exc:
             self._error(WebAppError(422, "MODEL_OUTPUT_REJECTED", str(exc)))
+        except WebAppError as error:
+            self._error(error)
+
+    def _raw_body_length(self) -> int:
+        if self._single_header("Transfer-Encoding") is not None:
+            raise WebAppError(400, "TRANSFER_ENCODING_BLOCKED", "chunked request bodies are forbidden")
+        raw_length = self._single_header("Content-Length")
+        if raw_length is None or not raw_length.isascii() or not raw_length.isdigit():
+            raise WebAppError(411, "CONTENT_LENGTH_REQUIRED", "bounded Content-Length is required")
+        length = int(raw_length)
+        if length > MAX_DOWNLOAD_BYTES:
+            raise WebAppError(413, "REQUEST_TOO_LARGE", "file upload exceeds its byte limit")
+        content_type = self._single_header("Content-Type")
+        if content_type is None or content_type.split(";", 1)[0].strip().lower() != (
+            "application/octet-stream"
+        ):
+            raise WebAppError(
+                415,
+                "BINARY_REQUIRED",
+                "Content-Type must be application/octet-stream",
+            )
+        return length
+
+    def do_PUT(self) -> None:
+        try:
+            self._check_host_and_origin(unsafe=True)
+            self._require_session()
+            self._require_csrf()
+            path, query = self._request_path()
+            if query:
+                raise WebAppError(400, "QUERY_BLOCKED", "query parameters are not accepted")
+            match = _INTAKE_FILE_ROUTE.fullmatch(path)
+            if match is None:
+                raise WebAppError(404, "NOT_FOUND", "upload endpoint was not found")
+            length = self._raw_body_length()
+            result = self.app.scan_store.upload(
+                match.group(1),
+                int(match.group(2)),
+                self.rfile,
+                length,
+            )
+            self._json(201, result)
+        except WebScanError as error:
+            self._scan_error(error)
+        except WebAppError as error:
+            self._error(error)
+
+    def do_DELETE(self) -> None:
+        try:
+            self._check_host_and_origin(unsafe=True)
+            self._require_session()
+            self._require_csrf()
+            path, query = self._request_path()
+            if query:
+                raise WebAppError(400, "QUERY_BLOCKED", "query parameters are not accepted")
+            match = _INTAKE_ROUTE.fullmatch(path)
+            if match is None:
+                raise WebAppError(404, "NOT_FOUND", "delete endpoint was not found")
+            if self._single_header("Transfer-Encoding") is not None:
+                raise WebAppError(400, "TRANSFER_ENCODING_BLOCKED", "delete body is forbidden")
+            raw_length = self._single_header("Content-Length")
+            if raw_length not in {None, "0"}:
+                raise WebAppError(400, "DELETE_BODY_BLOCKED", "delete body is forbidden")
+            self._json(200, self.app.scan_store.discard(match.group(1)))
+        except WebScanError as error:
+            self._scan_error(error)
         except WebAppError as error:
             self._error(error)
 
@@ -615,9 +823,7 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
         except WebAppError as error:
             self._error(error)
 
-    do_PUT = _unsupported_write
     do_PATCH = _unsupported_write
-    do_DELETE = _unsupported_write
 
     def do_OPTIONS(self) -> None:
         try:
@@ -634,30 +840,65 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
 
 
 def create_server(
-    data_root: Path,
+    data_root: Path | None = None,
     *,
     host: str = DEFAULT_HOST,
     port: int = DEFAULT_PORT,
     model_adapter: OmlxModelAdapter | None = None,
+    scanner_backend: ScannerBackend | None = None,
 ) -> WorkbenchHTTPServer:
     """Create, but do not start, a loopback server with fresh session secrets."""
 
-    store = RegisteredRunStore(Path(data_root))
-    return WorkbenchHTTPServer((host, port), store, model_adapter or OmlxModelAdapter())
+    store = RegisteredRunStore(data_root)
+    return WorkbenchHTTPServer(
+        (host, port),
+        store,
+        model_adapter or OmlxModelAdapter(),
+        scanner_backend,
+    )
 
 
 def main(arguments: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m sbom_workbench.webapp")
-    parser.add_argument("--data-root", required=True, type=Path)
+    parser.add_argument(
+        "--data-root",
+        type=Path,
+        help="optional hash-bound run registry; omit for source-generation-only mode",
+    )
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
+    parser.add_argument("--syft-bin", type=Path)
+    parser.add_argument("--syft-config", type=Path)
+    parser.add_argument("--syft-receipt", type=Path)
+    parser.add_argument("--runtime-registry", type=Path)
+    parser.add_argument("--sandbox-exec", type=Path, default=Path("/usr/bin/sandbox-exec"))
+    parser.add_argument("--scan-timeout-seconds", type=int, default=600)
+    parser.add_argument("--disable-scanning", action="store_true")
     parsed = parser.parse_args(arguments)
     try:
-        server = create_server(parsed.data_root, port=parsed.port)
-    except (OSError, WebAppError, ModelAdapterError) as exc:
+        runtime = discover_scanner_runtime(
+            syft_bin=parsed.syft_bin,
+            syft_config=parsed.syft_config,
+            syft_receipt=parsed.syft_receipt,
+            runtime_registry=parsed.runtime_registry,
+            sandbox_exec=parsed.sandbox_exec,
+            timeout_seconds=parsed.scan_timeout_seconds,
+            disabled=parsed.disable_scanning,
+        )
+        server = create_server(
+            parsed.data_root,
+            port=parsed.port,
+            scanner_backend=SubprocessScanner(runtime) if runtime is not None else None,
+        )
+    except (OSError, WebAppError, WebScanError, ModelAdapterError) as exc:
         print(f"BLOCKED: {exc}", file=sys.stderr)
         return 2
     print(f"Local UI: {server.launch_url}", file=sys.stderr)
     print("Model adapter: DISABLED", file=sys.stderr)
+    print(
+        "Source scanner: "
+        + ("ENABLED" if runtime is not None else "DISABLED_NOT_CONFIGURED"),
+        file=sys.stderr,
+    )
     try:
         server.serve_forever()
     except KeyboardInterrupt:

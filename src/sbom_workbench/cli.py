@@ -15,8 +15,19 @@ import sys
 import tarfile
 from pathlib import Path
 
-from .acquire import AcquisitionError, acquire_git_source, registry_entry_hash, verify_acquisition
+from . import __version__
+from .acquire import (
+    AcquisitionError,
+    acquire_git_source,
+    load_trusted_acquisition_receipt,
+    registry_entry_hash,
+    verify_acquisition,
+)
 from .evidence import EvidenceError
+from .component_population import (
+    ComponentPopulationError,
+    build_component_population,
+)
 from .excel import ExcelImportError, import_pro03b
 from .euvd_handoff import (
     EuvdHandoffError,
@@ -32,11 +43,18 @@ from .signing import (
 )
 from .manifest import (
     ManifestError,
+    build_bounded_exact_set_manifest,
     build_exact_set_manifest,
+    canonical_json_bytes,
     sha256_file,
     write_json_atomic,
 )
 from .model import ModelAdapterError, OmlxModelAdapter
+from .model_candidate import (
+    observe_candidate_profile,
+    run_candidate_evaluation,
+    validate_candidate_evaluation,
+)
 from .model_eval import (
     ModelEvaluationError,
     cards_from_selftest_comparison,
@@ -58,6 +76,11 @@ from .pack import (
     verify_run_package,
     write_analysis_package,
     write_run_package,
+)
+from .privacy_projection import (
+    PrivacyProjectionError,
+    prepare_source_analysis_projection,
+    validate_source_analysis_projection,
 )
 from .reference_pack import (
     ReferencePackError,
@@ -92,6 +115,8 @@ from .selftest_pack import (
     write_selftest_package,
 )
 from .selftest_root import SelfTestRootError, verify_selftest_root
+from .source_audit import analyze_source_ecosystems
+from .source_only_validation import SourceOnlyValidationError, validate_source_only_output
 from .vex_consume import (
     VexConsumeError,
     build_vex_intake_receipt,
@@ -110,6 +135,11 @@ from .narrowing_reconcile import (
     validate_purl_presence,
 )
 from .webapp import WebAppError, create_server
+from .web_scan import (
+    SubprocessScanner,
+    WebScanError,
+    discover_scanner_runtime,
+)
 from .workflow import analyze_fixture, diff_graphs
 from .yocto import (
     acquire_profile,
@@ -148,6 +178,11 @@ SOURCE_ONLY_BOUNDARY = (
     "three-face selftest command."
 )
 SOURCE_ONLY_ZERO_COMPONENTS_STATUS = "SOURCE_ONLY_SCAN_COMPLETE_ZERO_COMPONENTS_OPEN_CANDIDATE"
+SOURCE_ONLY_COVERAGE_HOLD_STATUS = "SOURCE_ONLY_SCAN_COMPLETE_COVERAGE_HOLD_OPEN_CANDIDATE"
+SOURCE_ONLY_DEFAULT_MAX_FILES = 200_000
+SOURCE_ONLY_DEFAULT_MAX_TOTAL_BYTES = 8 * 1024 * 1024 * 1024
+SOURCE_ONLY_DEFAULT_MAX_SINGLE_FILE_BYTES = 2 * 1024 * 1024 * 1024
+SOURCE_ONLY_DEFAULT_MAX_DEPTH = 64
 # Python declaration files that syft's python-package-cataloger consumes as
 # input (installed environments are the other input). When none of these is
 # present AND no environment is installed, the cataloger cannot see imports,
@@ -247,6 +282,167 @@ _MODEL_PERMISSION_KEYS = {
 
 def _emit(value: object) -> None:
     print(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2))
+
+
+def _source_only_implementation_identity() -> dict[str, object]:
+    """Bind source-only behavior to the current Python implementation bytes."""
+
+    package_root = Path(__file__).resolve(strict=True).parent
+    files: list[dict[str, object]] = []
+    for path in package_root.rglob("*.py"):
+        relative = path.relative_to(package_root)
+        if "__pycache__" in relative.parts:
+            continue
+        info = path.lstat()
+        if path.is_symlink() or not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+            raise SelfTestError(
+                f"implementation source must be a single-link regular file: {relative.as_posix()}"
+            )
+        files.append(
+            {
+                "relative_path": relative.as_posix(),
+                "sha256": sha256_file(path),
+                "size": info.st_size,
+            }
+        )
+    files.sort(key=lambda item: str(item["relative_path"]).encode("utf-8"))
+    return {
+        "workbench_version": __version__,
+        "identity_scope": "src/sbom_workbench/**/*.py",
+        "file_count": len(files),
+        "exact_set_sha256": hashlib.sha256(
+            canonical_json_bytes({"workbench_version": __version__, "files": files})
+        ).hexdigest(),
+        "files": files,
+        "boundary": "Current implementation bytes; not a clean-git or release attestation.",
+    }
+
+
+def _declared_source_provenance(
+    parsed: argparse.Namespace,
+    source_manifest: dict[str, object],
+    output_root: Path,
+) -> dict[str, object]:
+    repository_url = parsed.source_url
+    commit = parsed.source_commit
+    if (repository_url is None) != (commit is None):
+        raise SelfTestError("source_url and source_commit must be declared together")
+    if repository_url is not None:
+        if (
+            not isinstance(repository_url, str)
+            or not repository_url.startswith("https://")
+            or len(repository_url) > 2048
+            or any(ord(character) < 0x20 for character in repository_url)
+        ):
+            raise SelfTestError("source_url must be one bounded HTTPS URL")
+        if not isinstance(commit, str) or not re.fullmatch(r"[0-9a-f]{40}", commit):
+            raise SelfTestError("source_commit must be one lowercase 40-hex Git commit")
+    license_expression = parsed.source_license
+    if license_expression is not None and (
+        not isinstance(license_expression, str)
+        or not license_expression
+        or len(license_expression) > 256
+        or any(ord(character) < 0x20 for character in license_expression)
+    ):
+        raise SelfTestError("source_license must be bounded printable text")
+    acquisition_receipt = parsed.source_acquisition_receipt
+    trusted_acquisition_sha256 = parsed.trusted_source_acquisition_receipt_sha256
+    if (acquisition_receipt is None) != (trusted_acquisition_sha256 is None):
+        raise SelfTestError(
+            "source acquisition receipt and its trusted SHA-256 must be declared together"
+        )
+    if acquisition_receipt is not None:
+        try:
+            report = load_trusted_acquisition_receipt(
+                acquisition_receipt,
+                trusted_acquisition_sha256,
+            )
+        except AcquisitionError as exc:
+            raise SelfTestError(f"source acquisition receipt is invalid: {exc}") from exc
+        acquisition_tree = report.get("tree_manifest")
+        if not isinstance(acquisition_tree, dict) or set(acquisition_tree) != {
+            "schema_version",
+            "root_id",
+            "file_count",
+            "total_bytes",
+            "exact_set_sha256",
+            "files",
+        }:
+            raise SelfTestError("source acquisition receipt tree manifest is invalid")
+        tree_root_id = acquisition_tree.get("root_id")
+        tree_files = acquisition_tree.get("files")
+        if (
+            acquisition_tree.get("schema_version") != "1.0"
+            or not isinstance(tree_root_id, str)
+            or not tree_root_id
+            or not isinstance(tree_files, list)
+            or acquisition_tree.get("file_count") != source_manifest.get("file_count")
+            or acquisition_tree.get("total_bytes") != source_manifest.get("total_bytes")
+            or tree_files != source_manifest.get("files")
+        ):
+            raise SelfTestError(
+                "source snapshot does not match the acquisition receipt exact-set"
+            )
+        expected_tree_sha256 = hashlib.sha256(
+            canonical_json_bytes({"root_id": tree_root_id, "files": tree_files})
+        ).hexdigest()
+        if acquisition_tree.get("exact_set_sha256") != expected_tree_sha256:
+            raise SelfTestError("source acquisition tree exact-set SHA-256 is invalid")
+        if repository_url is not None and repository_url != report["source_url"]:
+            raise SelfTestError("source_url differs from the acquisition receipt")
+        if commit is not None and commit != report["resolved_commit"]:
+            raise SelfTestError("source_commit differs from the acquisition receipt")
+        if (
+            license_expression is not None
+            and license_expression != report["license_expression"]
+        ):
+            raise SelfTestError("source_license differs from the acquisition receipt")
+        snapshot = _snapshot_pinned_runtime_file(
+            Path(acquisition_receipt),
+            output_root / "source-acquisition-receipt.json",
+            expected_sha256=trusted_acquisition_sha256,
+            executable=False,
+        )
+        return {
+            "repository_url": report["source_url"],
+            "commit": report["resolved_commit"],
+            "declared_license_expression": report["license_expression"],
+            "status": "GOVERNED_ACQUISITION_RECEIPT_AND_TREE_VERIFIED",
+            "dataset_id": report["dataset_id"],
+            "acquisition_status": report["acquisition_status"],
+            "license_review_status": report["license_review_status"],
+            "registry_sha256": report["registry_sha256"],
+            "registry_entry_sha256": report["registry_entry_sha256"],
+            "acquisition_receipt": {
+                "path": snapshot.name,
+                "sha256": trusted_acquisition_sha256,
+            },
+            "acquisition_tree": {
+                "root_id": tree_root_id,
+                "exact_set_sha256": expected_tree_sha256,
+                "file_count": acquisition_tree["file_count"],
+                "total_bytes": acquisition_tree["total_bytes"],
+            },
+            "boundary": (
+                "Governed acquisition identity and source-tree exact-set are verified. "
+                "ACQUIRED_UNSEALED or a license declaration does not establish rights, "
+                "SBOM completeness, product release, or conformity."
+            ),
+        }
+    return {
+        "repository_url": repository_url,
+        "commit": commit,
+        "declared_license_expression": license_expression,
+        "status": (
+            "OPERATOR_DECLARED_NOT_INDEPENDENTLY_VERIFIED"
+            if repository_url is not None
+            else "NOT_DECLARED"
+        ),
+        "boundary": (
+            "Declaration is bound into this receipt but is not a governed-acquisition "
+            "verification or rights approval."
+        ),
+    }
 
 
 def _is_within(candidate: Path, root: Path) -> bool:
@@ -1377,6 +1573,7 @@ def _execute_scan_source_only(parsed: argparse.Namespace) -> dict[str, object]:
         raise SelfTestError("source snapshot and output root must not overlap")
     output_root = _new_output_root(requested_output)
     try:
+        implementation_identity = _source_only_implementation_identity()
         acquisition_identity = _verify_syft_acquisition(
             syft_binary,
             syft_config,
@@ -1408,7 +1605,22 @@ def _execute_scan_source_only(parsed: argparse.Namespace) -> dict[str, object]:
             "binary_sha256": acquisition_identity["binary_sha256"],
             "config_sha256": acquisition_identity["config_sha256"],
         }
-        source_manifest = build_exact_set_manifest(source_root, "euvd-source-snapshot")
+        source_resource_budgets = {
+            "max_files": parsed.max_source_files,
+            "max_total_bytes": parsed.max_source_bytes,
+            "max_single_file_bytes": parsed.max_single_source_file_bytes,
+            "max_depth": parsed.max_source_depth,
+        }
+        source_manifest = build_bounded_exact_set_manifest(
+            source_root,
+            "euvd-source-snapshot",
+            **source_resource_budgets,
+        )
+        source_provenance = _declared_source_provenance(
+            parsed,
+            source_manifest,
+            output_root,
+        )
         source_identity = _directory_input_identity(source_manifest)
         profile_id = "m3a-source-directory"
         raw_root = output_root / "raw" / profile_id
@@ -1452,6 +1664,21 @@ def _execute_scan_source_only(parsed: argparse.Namespace) -> dict[str, object]:
             max_components=SELFTEST_MAX_COMPONENTS,
         )
         component_count = len(projection["components"])
+        component_population = build_component_population(
+            source_root,
+            source_manifest,
+            projection,
+            product_name=parsed.product_name,
+            declared_version=parsed.declared_version,
+            build_id=parsed.build_id,
+            release_artifact_sha256=parsed.release_artifact_sha256,
+        )
+        ecosystem_audit = analyze_source_ecosystems(
+            source_root,
+            source_manifest,
+            projection,
+            cyclonedx_path,
+        )
         source_findings = _detect_zero_components_python_findings(
             source_root, component_count
         )
@@ -1483,6 +1710,10 @@ def _execute_scan_source_only(parsed: argparse.Namespace) -> dict[str, object]:
             and home_assistant_manifest["apparent_gaps"]
         ):
             blindspots.add(_HOME_ASSISTANT_MANIFEST_BLINDSPOT)
+        blindspots.update(ecosystem_audit["findings"])
+        population_gate = component_population["reconciliation"]["gate"]
+        if population_gate.startswith("HOLD_"):
+            blindspots.add(f"COMPONENT_POPULATION_{population_gate}")
         profile = _selftest_profile(
             profile_id=profile_id,
             profile_kind="SOURCE_DIRECTORY",
@@ -1493,21 +1724,31 @@ def _execute_scan_source_only(parsed: argparse.Namespace) -> dict[str, object]:
             timeout_seconds=parsed.timeout_seconds,
             extra_blindspots=frozenset(blindspots),
         )
-        status = (
-            SOURCE_ONLY_ZERO_COMPONENTS_STATUS
-            if (
-                source_findings["zero_components_python_project"]
-                or c_cpp_findings["zero_components_c_cpp_project"]
-            )
-            else SOURCE_ONLY_STATUS
-        )
+        if ecosystem_audit["coverage_gate"] == "HOLD" or population_gate.startswith(
+            "HOLD_"
+        ):
+            status = SOURCE_ONLY_COVERAGE_HOLD_STATUS
+        elif (
+            source_findings["zero_components_python_project"]
+            or c_cpp_findings["zero_components_c_cpp_project"]
+        ):
+            status = SOURCE_ONLY_ZERO_COMPONENTS_STATUS
+        else:
+            status = SOURCE_ONLY_STATUS
         observation = build_profile_observation(
             profile,
             projection,
             source_identity,
             scanner_identity,
         )
-        if build_exact_set_manifest(source_root, "euvd-source-snapshot") != source_manifest:
+        if (
+            build_bounded_exact_set_manifest(
+                source_root,
+                "euvd-source-snapshot",
+                **source_resource_budgets,
+            )
+            != source_manifest
+        ):
             raise SelfTestError("source snapshot changed during the scan")
         if (
             sha256_file(syft_binary) != scanner_identity["binary_sha256"]
@@ -1523,7 +1764,13 @@ def _execute_scan_source_only(parsed: argparse.Namespace) -> dict[str, object]:
             != acquisition_identity["runtime_registry_sha256"]
         ):
             raise SelfTestError("Syft receipt or runtime registry changed during the scan")
+        if _source_only_implementation_identity() != implementation_identity:
+            raise SelfTestError("Workbench implementation changed during the scan")
         raw_manifest = build_exact_set_manifest(raw_root, f"{profile_id}-raw")
+        source_manifest_path = output_root / "source-manifest.json"
+        write_json_atomic(source_manifest_path, source_manifest)
+        component_population_path = output_root / "component-population.json"
+        write_json_atomic(component_population_path, component_population)
         observation_path = output_root / "source-observation.json"
         write_json_atomic(observation_path, observation)
         run_id = observation["run_id"]
@@ -1533,7 +1780,24 @@ def _execute_scan_source_only(parsed: argparse.Namespace) -> dict[str, object]:
             "status": status,
             "scanner_identity": scanner_identity,
             "scanner_acquisition_identity": acquisition_identity,
+            "implementation_identity": implementation_identity,
+            "source_provenance": source_provenance,
             "source_input_identity": source_identity,
+            "source_manifest": {
+                "path": "source-manifest.json",
+                "sha256": sha256_file(source_manifest_path),
+                "exact_set_sha256": source_manifest["exact_set_sha256"],
+                "file_count": source_manifest["file_count"],
+                "total_bytes": source_manifest["total_bytes"],
+            },
+            "component_population": {
+                "path": "component-population.json",
+                "sha256": sha256_file(component_population_path),
+                "population_sha256": component_population["population_sha256"],
+                "item_count": component_population["discovery"]["item_count"],
+                "reconciliation_gate": population_gate,
+            },
+            "source_resource_budgets": source_resource_budgets,
             "scans": [
                 {
                     "profile_id": profile_id,
@@ -1547,6 +1811,7 @@ def _execute_scan_source_only(parsed: argparse.Namespace) -> dict[str, object]:
                     "c_cpp_declared_dependency_files_present": c_cpp_findings["declared_dependency_files_present"],
                     "requirements_r_reference": requirements_r_reference,
                     "home_assistant_manifest": home_assistant_manifest,
+                    "ecosystem_audit": ecosystem_audit,
                     "findings": sorted(blindspots),
                     "import_evidence": import_evidence,
                 }
@@ -1568,6 +1833,8 @@ def _execute_scan_source_only(parsed: argparse.Namespace) -> dict[str, object]:
                 "run_id": run_id,
                 "scan_receipt_sha256": sha256_file(output_root / "scan-receipt.json"),
                 "reconciliation_status": "NOT_APPLICABLE_SINGLE_FACE",
+                "component_population_sha256": component_population["population_sha256"],
+                "component_population_gate": population_gate,
             },
         )
         completion_sha256 = sha256_file(output_root / "SELFTEST_COMPLETE.json")
@@ -1580,6 +1847,21 @@ def _execute_scan_source_only(parsed: argparse.Namespace) -> dict[str, object]:
             "cyclonedx_path": cyclonedx_path.as_posix(),
             "cyclonedx_sha256": sha256_file(cyclonedx_path),
             "component_count": len(projection["components"]),
+            "product_package_candidate_count": ecosystem_audit["component_scope"][
+                "product_package_candidate_count"
+            ],
+            "coverage_gate": ecosystem_audit["coverage_gate"],
+            "component_population_gate": population_gate,
+            "component_population_item_count": component_population["discovery"]["item_count"],
+            "component_population_unmatched_count": component_population["reconciliation"][
+                "unmatched_item_count"
+            ],
+            "component_population_root_identity_hold_count": component_population[
+                "reconciliation"
+            ]["root_identity_hold_item_count"],
+            "build_binding_status": component_population["product_build_binding"]["status"],
+            "source_manifest_sha256": sha256_file(source_manifest_path),
+            "source_provenance_status": source_provenance["status"],
             "profile_count": 1,
             "raw_format_count": 3,
             "network_policy": "MACOS_SANDBOX_EXEC_DENY_NETWORK",
@@ -2104,17 +2386,81 @@ def _parser() -> argparse.ArgumentParser:
         help="fixed /usr/bin/sandbox-exec used with an explicit deny-network profile",
     )
     source_only.add_argument("--timeout-seconds", type=int, default=600)
+    source_only.add_argument("--source-url")
+    source_only.add_argument("--source-commit")
+    source_only.add_argument("--source-license")
+    source_only.add_argument(
+        "--source-acquisition-receipt",
+        type=Path,
+        help="governed acquisition receipt whose tree_manifest must match source-root",
+    )
+    source_only.add_argument(
+        "--trusted-source-acquisition-receipt-sha256",
+        help="external SHA-256 trust anchor for --source-acquisition-receipt",
+    )
+    source_only.add_argument(
+        "--max-source-files",
+        type=int,
+        default=SOURCE_ONLY_DEFAULT_MAX_FILES,
+    )
+    source_only.add_argument(
+        "--max-source-bytes",
+        type=int,
+        default=SOURCE_ONLY_DEFAULT_MAX_TOTAL_BYTES,
+    )
+    source_only.add_argument(
+        "--max-single-source-file-bytes",
+        type=int,
+        default=SOURCE_ONLY_DEFAULT_MAX_SINGLE_FILE_BYTES,
+    )
+    source_only.add_argument(
+        "--max-source-depth",
+        type=int,
+        default=SOURCE_ONLY_DEFAULT_MAX_DEPTH,
+    )
     source_only.add_argument(
         "--comparison-namespace", default="euvd-sbom-matcher-selftest"
     )
     source_only.add_argument("--product-name", default="euvd-sbom-matcher")
     source_only.add_argument("--declared-version", default="2.3.0")
+    source_only.add_argument(
+        "--build-id",
+        help="bounded release/build identifier; requires --release-artifact-sha256",
+    )
+    source_only.add_argument(
+        "--release-artifact-sha256",
+        help="lowercase SHA-256 of the release artifact; requires --build-id",
+    )
 
     validate_selftest = subcommands.add_parser(
         "validate-selftest-output",
         help="read-only verification of one sealed M4A self-test run directory",
     )
     validate_selftest.add_argument("--run-directory", required=True, type=Path)
+
+    validate_source_only = subcommands.add_parser(
+        "validate-source-only-output",
+        help="read-only verification of one source-only scan and its single-face boundary",
+    )
+    validate_source_only.add_argument("--output-root", required=True, type=Path)
+    validate_source_only.add_argument("--source-root", type=Path)
+    validate_source_only.add_argument("--trusted-completion-sha256")
+
+    prepare_privacy_projection = subcommands.add_parser(
+        "prepare-source-analysis-projection",
+        help="create a hash-bound CycloneDX analysis projection with declared source-root paths normalized",
+    )
+    prepare_privacy_projection.add_argument("--source-output-root", required=True, type=Path)
+    prepare_privacy_projection.add_argument("--source-root", required=True, type=Path)
+    prepare_privacy_projection.add_argument("--output-root", required=True, type=Path)
+
+    validate_privacy_projection = subcommands.add_parser(
+        "validate-source-analysis-projection",
+        help="read-only validation of one hash-bound source analysis projection",
+    )
+    validate_privacy_projection.add_argument("--projection-root", required=True, type=Path)
+    validate_privacy_projection.add_argument("--source-output-root", required=True, type=Path)
+    validate_privacy_projection.add_argument("--trusted-completion-sha256")
 
     validate_selftest_root = subcommands.add_parser(
         "validate-selftest-root",
@@ -2156,6 +2502,25 @@ def _parser() -> argparse.ArgumentParser:
     run_model_evaluation.add_argument("--timeout-seconds", type=float, default=120.0)
     run_model_evaluation.add_argument("--max-output-tokens", type=int, default=1200)
 
+    run_model_candidate = subcommands.add_parser(
+        "run-model-candidate-evaluation",
+        help="evaluate one versioned local model candidate without changing the sealed M5A baseline",
+    )
+    card_source = run_model_candidate.add_mutually_exclusive_group(required=True)
+    card_source.add_argument("--cards", type=Path)
+    card_source.add_argument("--baseline-evaluation", type=Path)
+    run_model_candidate.add_argument("--model-dir", required=True, type=Path)
+    run_model_candidate.add_argument("--runtime-binary", required=True, type=Path)
+    run_model_candidate.add_argument("--runtime-version", required=True)
+    run_model_candidate.add_argument("--model-id", required=True)
+    run_model_candidate.add_argument("--endpoint", default=DEFAULT_OMLX_ENDPOINT)
+    run_model_candidate.add_argument("--observed-at", default=datetime.date.today().isoformat())
+    run_model_candidate.add_argument("--upstream-revision")
+    run_model_candidate.add_argument("--quantization-observation", required=True)
+    run_model_candidate.add_argument("--output", required=True, type=Path)
+    run_model_candidate.add_argument("--timeout-seconds", type=float, default=120.0)
+    run_model_candidate.add_argument("--max-output-tokens", type=int, default=1200)
+
     prepare_model_cards = subcommands.add_parser(
         "prepare-model-evaluation-cards",
         help="derive sealed minimal conflict cards from one verified M3A/M4A output root",
@@ -2169,6 +2534,13 @@ def _parser() -> argparse.ArgumentParser:
     )
     validate_model_evaluation.add_argument("--evaluation", required=True, type=Path)
     validate_model_evaluation.add_argument("--trusted-evaluation-sha256")
+
+    validate_model_candidate = subcommands.add_parser(
+        "validate-model-candidate-evaluation",
+        help="read-only validation of one M5B single-model shadow candidate record",
+    )
+    validate_model_candidate.add_argument("--evaluation", required=True, type=Path)
+    validate_model_candidate.add_argument("--trusted-evaluation-sha256")
 
     backup_selftest = subcommands.add_parser(
         "backup-selftest",
@@ -2277,9 +2649,23 @@ def _parser() -> argparse.ArgumentParser:
     intake_narrowed.add_argument("--output", required=True, type=Path)
     intake_narrowed.add_argument("--timeout-seconds", type=int, default=120)
 
-    serve = subcommands.add_parser("serve", help="serve the registered runs on loopback only")
-    serve.add_argument("--data-root", required=True, type=Path)
+    serve = subcommands.add_parser(
+        "serve",
+        help="serve source generation and optional registered evidence on loopback only",
+    )
+    serve.add_argument(
+        "--data-root",
+        type=Path,
+        help="optional hash-bound run registry; omit for source-generation-only mode",
+    )
     serve.add_argument("--port", type=int, default=8765)
+    serve.add_argument("--syft-bin", type=Path)
+    serve.add_argument("--syft-config", type=Path)
+    serve.add_argument("--syft-receipt", type=Path)
+    serve.add_argument("--runtime-registry", type=Path)
+    serve.add_argument("--sandbox-exec", type=Path, default=DEFAULT_SANDBOX_EXEC)
+    serve.add_argument("--scan-timeout-seconds", type=int, default=600)
+    serve.add_argument("--disable-scanning", action="store_true")
     return parser
 
 
@@ -2452,6 +2838,91 @@ def _execute_model_evaluation(parsed: argparse.Namespace) -> dict[str, object]:
         "api_key_source": f"ENVIRONMENT_ONLY:{MODEL_API_KEY_ENV}",
         "api_key_captured": False,
         "api_key_present": api_key is not None,
+    }
+
+
+def _execute_model_candidate_evaluation(parsed: argparse.Namespace) -> dict[str, object]:
+    output = _new_output_file(parsed.output, "model candidate evaluation output")
+    if parsed.baseline_evaluation is not None:
+        baseline = _strict_json_file(
+            parsed.baseline_evaluation,
+            "baseline model evaluation",
+            maximum=64 * 1024 * 1024,
+        )
+        validate_evaluation(baseline)
+        cards = baseline["cards"]
+        card_source = {
+            "kind": "VALIDATED_M5A_EVALUATION",
+            "path": Path(parsed.baseline_evaluation).name,
+            "sha256": sha256_file(parsed.baseline_evaluation),
+        }
+    else:
+        cards = _strict_json_file(
+            parsed.cards,
+            "model candidate evaluation cards",
+            maximum=8 * 1024 * 1024,
+        )
+        if not isinstance(cards, list):
+            raise ModelEvaluationError("model candidate cards must be one JSON array")
+        card_source = {
+            "kind": "STANDALONE_SEALED_CARD_SET",
+            "path": Path(parsed.cards).name,
+            "sha256": sha256_file(parsed.cards),
+        }
+    profile = observe_candidate_profile(
+        model_directory=parsed.model_dir,
+        runtime_binary=parsed.runtime_binary,
+        runtime_version=parsed.runtime_version,
+        endpoint=parsed.endpoint,
+        model_id=parsed.model_id,
+        observed_at=parsed.observed_at,
+        upstream_revision=parsed.upstream_revision,
+        quantization_observation=parsed.quantization_observation,
+    )
+    api_key = os.environ.get(MODEL_API_KEY_ENV)
+    if api_key is None:
+        raise ModelAdapterError(
+            f"enabled shadow evaluation requires {MODEL_API_KEY_ENV} in the process environment"
+        )
+    adapter = OmlxModelAdapter(
+        enabled=True,
+        endpoint=parsed.endpoint,
+        model_id=parsed.model_id,
+        allowed_model_ids=frozenset({parsed.model_id}),
+        api_key=api_key,
+        timeout=parsed.timeout_seconds,
+        seed=20260804,
+        max_output_tokens=parsed.max_output_tokens,
+    )
+    record = run_candidate_evaluation(
+        cards,
+        adapter.advise,
+        candidate_profile=profile,
+    )
+    validation = validate_candidate_evaluation(record)
+    write_json_atomic(output, record)
+    persisted = _strict_json_file(
+        output,
+        "model candidate evaluation output",
+        maximum=128 * 1024 * 1024,
+    )
+    if persisted != record:
+        raise ModelEvaluationError("persisted model candidate evaluation differs")
+    validate_candidate_evaluation(persisted)
+    return {
+        **validation,
+        "output": output.as_posix(),
+        "output_sha256": sha256_file(output),
+        "card_source": card_source,
+        "model_directory_exact_set_sha256": profile["model"]["directory_manifest"][
+            "exact_set_sha256"
+        ],
+        "runtime_binary_sha256": profile["runtime"]["binary_sha256"],
+        "api_key_source": f"ENVIRONMENT_ONLY:{MODEL_API_KEY_ENV}",
+        "api_key_captured": False,
+        "external_anchor_instruction": (
+            "Record evaluation_payload_sha256 outside this output before later validation."
+        ),
     }
 
 
@@ -2740,6 +3211,33 @@ def main(arguments: list[str] | None = None) -> int:
         if parsed.command == "scan-source-only":
             _emit(_execute_scan_source_only(parsed))
             return 0
+        if parsed.command == "validate-source-only-output":
+            _emit(
+                validate_source_only_output(
+                    parsed.output_root,
+                    source_root=parsed.source_root,
+                    trusted_completion_sha256=parsed.trusted_completion_sha256,
+                )
+            )
+            return 0
+        if parsed.command == "prepare-source-analysis-projection":
+            _emit(
+                prepare_source_analysis_projection(
+                    parsed.source_output_root,
+                    parsed.source_root,
+                    parsed.output_root,
+                )
+            )
+            return 0
+        if parsed.command == "validate-source-analysis-projection":
+            _emit(
+                validate_source_analysis_projection(
+                    parsed.projection_root,
+                    source_output_root=parsed.source_output_root,
+                    trusted_completion_sha256=parsed.trusted_completion_sha256,
+                )
+            )
+            return 0
         if parsed.command == "validate-selftest-output":
             _emit(verify_selftest_package(parsed.run_directory))
             return 0
@@ -2765,6 +3263,9 @@ def main(arguments: list[str] | None = None) -> int:
             return 0
         if parsed.command == "run-model-evaluation":
             _emit(_execute_model_evaluation(parsed))
+            return 0
+        if parsed.command == "run-model-candidate-evaluation":
+            _emit(_execute_model_candidate_evaluation(parsed))
             return 0
         if parsed.command == "prepare-model-evaluation-cards":
             source_validation = verify_selftest_root(parsed.selftest_root)
@@ -2811,6 +3312,22 @@ def main(arguments: list[str] | None = None) -> int:
                         trusted_evaluation_sha256=parsed.trusted_evaluation_sha256,
                     ),
                     "evaluation_sha256": sha256_file(parsed.evaluation),
+                }
+            )
+            return 0
+        if parsed.command == "validate-model-candidate-evaluation":
+            record = _strict_json_file(
+                parsed.evaluation,
+                "model candidate evaluation",
+                maximum=128 * 1024 * 1024,
+            )
+            _emit(
+                {
+                    **validate_candidate_evaluation(
+                        record,
+                        trusted_evaluation_sha256=parsed.trusted_evaluation_sha256,
+                    ),
+                    "evaluation_file_sha256": sha256_file(parsed.evaluation),
                 }
             )
             return 0
@@ -2877,9 +3394,35 @@ def main(arguments: list[str] | None = None) -> int:
             _emit(_execute_intake_narrowed(parsed))
             return 0
         if parsed.command == "serve":
-            server = create_server(parsed.data_root, port=parsed.port)
+            scanner_runtime = discover_scanner_runtime(
+                syft_bin=parsed.syft_bin,
+                syft_config=parsed.syft_config,
+                syft_receipt=parsed.syft_receipt,
+                runtime_registry=parsed.runtime_registry,
+                sandbox_exec=parsed.sandbox_exec,
+                timeout_seconds=parsed.scan_timeout_seconds,
+                disabled=parsed.disable_scanning,
+            )
+            server = create_server(
+                parsed.data_root,
+                port=parsed.port,
+                scanner_backend=(
+                    SubprocessScanner(scanner_runtime)
+                    if scanner_runtime is not None
+                    else None
+                ),
+            )
             print(f"Local UI: {server.launch_url}", file=sys.stderr)
             print("Model adapter: DISABLED", file=sys.stderr)
+            print(
+                "Source scanner: "
+                + (
+                    "ENABLED"
+                    if scanner_runtime is not None
+                    else "DISABLED_NOT_CONFIGURED"
+                ),
+                file=sys.stderr,
+            )
             try:
                 server.serve_forever()
             except KeyboardInterrupt:
@@ -2891,17 +3434,21 @@ def main(arguments: list[str] | None = None) -> int:
         RegistryError,
         AcquisitionError,
         EvidenceError,
+        ComponentPopulationError,
         ExcelImportError,
         PackError,
         ReferencePackError,
         SelfTestError,
         SelfTestPackError,
         SelfTestRootError,
+        SourceOnlyValidationError,
+        PrivacyProjectionError,
         ModelEvaluationError,
         EuvdHandoffError,
         OperationsError,
         ManifestError,
         WebAppError,
+        WebScanError,
         ModelAdapterError,
         NarrowingError,
         ResourceError,

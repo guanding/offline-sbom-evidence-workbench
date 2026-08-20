@@ -7,10 +7,12 @@ import errno
 import os
 import tempfile
 import threading
+import time
 import unittest
 from pathlib import Path
 
 from sbom_workbench.webapp import RegisteredRunStore, WebAppError, create_server
+from tests.test_web_scan import FakeScanner, intake
 
 
 def canonical_bytes(value: object) -> bytes:
@@ -143,6 +145,17 @@ class WebSecurityTests(unittest.TestCase):
         self.assertEqual(headers["x-frame-options"], "DENY")
         self.assertIn("default-src 'none'", headers["content-security-policy"])
 
+    def test_generation_only_store_requires_no_evidence_directory(self) -> None:
+        store = RegisteredRunStore(None)
+        self.assertEqual(store.list_runs(), [])
+        with self.assertRaisesRegex(WebAppError, "not registered"):
+            store.get_run("run-1")
+
+    def test_port_collision_preserves_original_bind_error(self) -> None:
+        with self.assertRaises(OSError) as raised:
+            create_server(None, port=self.port)
+        self.assertIn(raised.exception.errno, {errno.EADDRINUSE, errno.EACCES})
+
     def test_launch_url_uses_fragment_and_does_not_set_cross_port_cookie(self) -> None:
         self.assertEqual(
             self.server.launch_url,
@@ -261,6 +274,23 @@ class WebSecurityTests(unittest.TestCase):
         self.assertEqual(status, 409)
         self.assertEqual(json.loads(payload)["error"], "MODEL_DISABLED")
 
+    def test_scan_intake_fails_closed_when_scanner_is_not_configured(self) -> None:
+        body = json.dumps(intake()).encode()
+        status, _, payload = self.request(
+            "POST",
+            "/api/intakes",
+            headers=self.auth(
+                Origin=self.origin,
+                **{
+                    "Content-Type": "application/json",
+                    "X-CSRF-Token": self.server.csrf_token,
+                },
+            ),
+            body=body,
+        )
+        self.assertEqual(status, 409)
+        self.assertEqual(json.loads(payload)["error"], "SCANNER_DISABLED")
+
     def test_hash_drift_and_synthetic_release_upgrade_fail_closed(self) -> None:
         dashboard_path = self.root / "runs" / "run-1" / "dashboard.json"
         dashboard_path.write_bytes(canonical_bytes({**dashboard(), "components": []}))
@@ -307,6 +337,173 @@ class WebSecurityTests(unittest.TestCase):
             store = RegisteredRunStore(root)
             with self.assertRaisesRegex(WebAppError, "cannot carry product conformity status"):
                 store.get_run("run-1")
+
+
+class WebScanHTTPTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary.name)
+        write_data_root(self.root)
+        try:
+            self.server = create_server(self.root, port=0, scanner_backend=FakeScanner())
+        except OSError as exc:
+            self.temporary.cleanup()
+            if exc.errno not in {errno.EACCES, errno.EPERM} or os.environ.get(
+                "SBOM_WORKBENCH_REQUIRE_LOOPBACK_TESTS"
+            ) == "1":
+                raise
+            self.skipTest(
+                "sandbox forbids loopback bind; release gate must rerun with "
+                "SBOM_WORKBENCH_REQUIRE_LOOPBACK_TESTS=1 on a loopback-capable host"
+            )
+        self.port = self.server.server_address[1]
+        self.origin = f"http://127.0.0.1:{self.port}"
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+
+    def tearDown(self) -> None:
+        self.server.shutdown()
+        self.server.server_close()
+        self.thread.join(timeout=3)
+        self.temporary.cleanup()
+
+    def request(
+        self,
+        method: str,
+        path: str,
+        *,
+        headers: dict[str, str] | None = None,
+        body: bytes | None = None,
+    ) -> tuple[int, dict[str, str], bytes]:
+        connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=3)
+        connection.request(method, path, body=body, headers=headers or {})
+        response = connection.getresponse()
+        payload = response.read()
+        response_headers = {key.lower(): value for key, value in response.getheaders()}
+        connection.close()
+        return response.status, response_headers, payload
+
+    def auth(self, *, write: bool = False, **extra: str) -> dict[str, str]:
+        headers = {"Authorization": f"Bearer {self.server.session_token}", **extra}
+        if write:
+            headers.update(
+                {
+                    "Origin": self.origin,
+                    "X-CSRF-Token": self.server.csrf_token,
+                }
+            )
+        return headers
+
+    def create_job(self) -> str:
+        status, _, payload = self.request(
+            "POST",
+            "/api/intakes",
+            headers=self.auth(write=True, **{"Content-Type": "application/json"}),
+            body=json.dumps(intake()).encode(),
+        )
+        self.assertEqual(status, 201)
+        return json.loads(payload)["job_id"]
+
+    def test_session_exposes_bounded_scanner_capability(self) -> None:
+        status, _, payload = self.request("GET", "/api/session", headers=self.auth())
+        value = json.loads(payload)
+        self.assertEqual(status, 200)
+        self.assertTrue(value["scanner"]["enabled"])
+        self.assertEqual(value["scanner"]["limits"]["max_files"], 10_000)
+        self.assertNotIn("syft_bin", json.dumps(value))
+
+    def test_intake_requires_origin_and_csrf(self) -> None:
+        body = json.dumps(intake()).encode()
+        status, _, payload = self.request(
+            "POST",
+            "/api/intakes",
+            headers=self.auth(**{"Content-Type": "application/json"}),
+            body=body,
+        )
+        self.assertEqual(status, 403)
+        self.assertEqual(json.loads(payload)["error"], "ORIGIN_REQUIRED")
+
+    def test_full_upload_scan_download_and_cleanup_flow(self) -> None:
+        job_id = self.create_job()
+        status, _, payload = self.request(
+            "PUT",
+            f"/api/intakes/{job_id}/files/0",
+            headers=self.auth(write=True, **{"Content-Type": "application/octet-stream"}),
+            body=b"requests==2\n",
+        )
+        self.assertEqual(status, 201)
+        self.assertEqual(json.loads(payload)["status"], "READY")
+
+        status, _, _ = self.request(
+            "POST",
+            f"/api/intakes/{job_id}/complete",
+            headers=self.auth(write=True, **{"Content-Type": "application/json"}),
+            body=b"{}",
+        )
+        self.assertEqual(status, 202)
+        deadline = time.monotonic() + 2
+        while time.monotonic() < deadline:
+            status, _, payload = self.request(
+                "GET", f"/api/intakes/{job_id}", headers=self.auth()
+            )
+            value = json.loads(payload)
+            if value["status"] == "COMPLETE":
+                break
+            time.sleep(0.01)
+        self.assertEqual(value["status"], "COMPLETE")
+        metadata = value["result"]["downloads"]["cyclonedx-json"]
+        receipt_metadata = value["result"]["downloads"]["scan-receipt"]
+        self.assertEqual(
+            receipt_metadata["url"],
+            f"/api/intakes/{job_id}/downloads/scan-receipt",
+        )
+
+        status, _, payload = self.request(
+            "GET", metadata["url"], headers={"Authorization": "Bearer wrong"}
+        )
+        self.assertEqual(status, 401)
+        self.assertEqual(json.loads(payload)["error"], "SESSION_REQUIRED")
+
+        status, headers, payload = self.request("GET", metadata["url"], headers=self.auth())
+        self.assertEqual(status, 200)
+        self.assertEqual(hashlib.sha256(payload).hexdigest(), metadata["sha256"])
+        self.assertEqual(headers["x-content-sha256"], metadata["sha256"])
+        self.assertTrue(headers["content-disposition"].startswith("attachment;"))
+        self.assertNotIn("access-control-allow-origin", headers)
+
+        status, headers, payload = self.request(
+            "GET", receipt_metadata["url"], headers=self.auth()
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(hashlib.sha256(payload).hexdigest(), receipt_metadata["sha256"])
+        self.assertEqual(headers["x-content-sha256"], receipt_metadata["sha256"])
+        self.assertEqual(json.loads(payload)["status"], "FAKE_TEST_RECEIPT")
+
+        status, _, payload = self.request(
+            "DELETE", f"/api/intakes/{job_id}", headers=self.auth(write=True)
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(payload)["status"], "DISCARDED")
+
+    def test_upload_route_rejects_encoded_path_and_wrong_media_type(self) -> None:
+        job_id = self.create_job()
+        status, _, payload = self.request(
+            "PUT",
+            f"/api/intakes/{job_id}/files/%30",
+            headers=self.auth(write=True, **{"Content-Type": "application/octet-stream"}),
+            body=b"requests==2\n",
+        )
+        self.assertEqual(status, 400)
+        self.assertEqual(json.loads(payload)["error"], "INVALID_REQUEST_PATH")
+
+        status, _, payload = self.request(
+            "PUT",
+            f"/api/intakes/{job_id}/files/0",
+            headers=self.auth(write=True, **{"Content-Type": "text/plain"}),
+            body=b"requests==2\n",
+        )
+        self.assertEqual(status, 415)
+        self.assertEqual(json.loads(payload)["error"], "BINARY_REQUIRED")
 
 
 if __name__ == "__main__":

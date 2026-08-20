@@ -293,7 +293,15 @@ def _loopback_transport(
             body = response.read(MAX_RESPONSE_BYTES + 1)
     except ModelAdapterError:
         raise
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError) as exc:
+    except urllib.error.HTTPError as exc:
+        # Preserve only the bounded status code.  The response body can contain
+        # server paths or other operational details and is intentionally not
+        # promoted into model evidence, but a generic transport error made
+        # memory/compatibility failures impossible to distinguish.
+        raise ModelAdapterError(
+            f"oMLX returned HTTP {int(exc.code)} without changing workbench state"
+        ) from exc
+    except (urllib.error.URLError, TimeoutError, OSError) as exc:
         raise ModelAdapterError("oMLX request failed without changing workbench state") from exc
     if len(body) > MAX_RESPONSE_BYTES:
         raise ModelAdapterError("oMLX response exceeds the byte limit")

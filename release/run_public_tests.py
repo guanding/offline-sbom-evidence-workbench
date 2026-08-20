@@ -18,7 +18,7 @@ EXPECTED_SKIP_COUNTS = {
     "BYO CycloneDX/SPDX validation specs are unavailable in the public source set": 11,
     "historical acquisition evidence is intentionally absent from the public source set": 1,
 }
-EXPECTED_TEST_COUNT = 323
+EXPECTED_TEST_COUNT = 383
 ROOT = Path(__file__).resolve().parents[1]
 
 

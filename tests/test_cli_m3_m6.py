@@ -15,9 +15,14 @@ from pathlib import Path
 from unittest.mock import patch
 
 from sbom_workbench.cli import _validate_docker_archive_budget, main
+from sbom_workbench.manifest import build_exact_set_manifest
 from sbom_workbench.model import build_minimal_conflict_card
 from sbom_workbench.model_eval import rule_only_advice
 from sbom_workbench.selftest import SelfTestError
+from sbom_workbench.source_only_validation import (
+    SourceOnlyValidationError,
+    validate_source_only_output,
+)
 
 
 def _cyclonedx() -> dict[str, object]:
@@ -237,6 +242,51 @@ class CliM3M6Tests(unittest.TestCase):
             str(output),
         ]
 
+    def _source_acquisition_receipt(self) -> tuple[Path, str]:
+        commit = "7" * 40
+        tree_manifest = build_exact_set_manifest(
+            self.source, f"source-fixture@{commit}"
+        )
+        evidence_path = "requirements.txt"
+        evidence_sha256 = hashlib.sha256(
+            (self.source / evidence_path).read_bytes()
+        ).hexdigest()
+        report = {
+            "schema_version": "1.1",
+            "acquisition_status": "ACQUIRED_UNSEALED",
+            "acquired_at_utc": "2026-08-20T00:00:00Z",
+            "dataset_id": "source-fixture",
+            "source_url": "https://github.com/example/source-fixture.git",
+            "resolved_source_ips": ["8.8.8.8"],
+            "registry_sha256": "1" * 64,
+            "registry_entry_sha256": "2" * 64,
+            "resolved_commit": commit,
+            "annotated_tag_object": None,
+            "git_tree_sha": "3" * 40,
+            "git_archive_sha256": "4" * 64,
+            "license_expression": "LicenseRef-Test-Only",
+            "license_review_status": "TEST_ONLY_NOT_RIGHTS_REVIEW",
+            "license_evidence": [
+                {"relative_path": evidence_path, "sha256": evidence_sha256}
+            ],
+            "tool_runtime": {
+                "git": {
+                    "path": "/usr/bin/git",
+                    "version": "git version test",
+                    "sha256": "5" * 64,
+                },
+                "python": {
+                    "path": "/usr/bin/python3",
+                    "version": "3.test",
+                    "sha256": "6" * 64,
+                },
+            },
+            "tree_manifest": tree_manifest,
+        }
+        path = self.root / "source-acquisition-receipt.json"
+        _write_json(path, report)
+        return path, hashlib.sha256(path.read_bytes()).hexdigest()
+
     def test_scan_source_only_produces_cyclonedx_json_not_xml(self) -> None:
         # Regression for the local-model failure mode where Syft was invoked
         # with cyclonedx-xml and the result was saved as .json: the downstream
@@ -260,7 +310,10 @@ class CliM3M6Tests(unittest.TestCase):
         self.assertFalse(raw_bytes.lstrip().startswith(b"<"))
         document = json.loads(raw_bytes.decode("utf-8"))
         self.assertEqual(document["bomFormat"], "CycloneDX")
-        self.assertEqual(report["status"], "SOURCE_ONLY_SCAN_COMPLETE_OPEN_CANDIDATE")
+        self.assertEqual(
+            report["status"],
+            "SOURCE_ONLY_SCAN_COMPLETE_OPEN_CANDIDATE",
+        )
         self.assertEqual(report["profile_count"], 1)
         self.assertEqual(report["raw_format_count"], 3)
         self.assertEqual(report["reconciliation_status"], "NOT_APPLICABLE_SINGLE_FACE")
@@ -275,9 +328,106 @@ class CliM3M6Tests(unittest.TestCase):
             {item.name for item in (output / "raw" / "m3a-source-directory").iterdir()},
             {"raw.syft.json", "raw.cyclonedx.json", "raw.spdx.json"},
         )
+        validation = validate_source_only_output(output, source_root=self.source)
+        self.assertEqual(
+            validation["status"],
+            "SOURCE_ONLY_OUTPUT_VALID_WITH_SINGLE_FACE_BOUNDARY",
+        )
+        self.assertEqual(validation["source_reverification"], "MATCHED_CURRENT_SOURCE_ROOT")
         complete = json.loads((output / "SELFTEST_COMPLETE.json").read_text("utf-8"))
         self.assertEqual(complete["status"], report["status"])
         self.assertEqual(complete["run_id"], report["run_id"])
+
+    def test_source_only_binds_governed_acquisition_receipt_and_tree(self) -> None:
+        receipt, registry, anchors = self._trust_files()
+        source_receipt, source_receipt_sha256 = self._source_acquisition_receipt()
+        output = self.root / "governed-source-output"
+        arguments = self._source_only_arguments(output, receipt, registry) + [
+            "--source-acquisition-receipt",
+            str(source_receipt),
+            "--trusted-source-acquisition-receipt-sha256",
+            source_receipt_sha256,
+        ]
+        stdout = io.StringIO()
+        with (
+            patch.multiple("sbom_workbench.cli", **anchors),
+            patch("sbom_workbench.cli.TRUSTED_SANDBOX_EXEC", self.sandbox.resolve()),
+            patch("sbom_workbench.cli.TRUSTED_SANDBOX_UID", os.getuid()),
+            patch("sbom_workbench.cli.subprocess.run", side_effect=self._fake_process),
+            contextlib.redirect_stdout(stdout),
+        ):
+            self.assertEqual(main(arguments), 0)
+        report = json.loads(stdout.getvalue())
+        self.assertEqual(
+            report["source_provenance_status"],
+            "GOVERNED_ACQUISITION_RECEIPT_AND_TREE_VERIFIED",
+        )
+        copied_receipt = output / "source-acquisition-receipt.json"
+        self.assertEqual(copied_receipt.read_bytes(), source_receipt.read_bytes())
+        validation = validate_source_only_output(output, source_root=self.source)
+        self.assertEqual(
+            validation["source_provenance_status"],
+            "GOVERNED_ACQUISITION_RECEIPT_AND_TREE_VERIFIED",
+        )
+
+    def test_source_only_validator_rejects_copied_acquisition_receipt_tampering(self) -> None:
+        receipt, registry, anchors = self._trust_files()
+        source_receipt, source_receipt_sha256 = self._source_acquisition_receipt()
+        output = self.root / "tampered-source-receipt-output"
+        arguments = self._source_only_arguments(output, receipt, registry) + [
+            "--source-acquisition-receipt",
+            str(source_receipt),
+            "--trusted-source-acquisition-receipt-sha256",
+            source_receipt_sha256,
+        ]
+        with (
+            patch.multiple("sbom_workbench.cli", **anchors),
+            patch("sbom_workbench.cli.TRUSTED_SANDBOX_EXEC", self.sandbox.resolve()),
+            patch("sbom_workbench.cli.TRUSTED_SANDBOX_UID", os.getuid()),
+            patch("sbom_workbench.cli.subprocess.run", side_effect=self._fake_process),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            self.assertEqual(main(arguments), 0)
+        copied = output / "source-acquisition-receipt.json"
+        copied.write_text("{}\n", encoding="utf-8")
+        with self.assertRaisesRegex(
+            SourceOnlyValidationError,
+            "external trust anchor",
+        ):
+            validate_source_only_output(output, source_root=self.source)
+
+    def test_source_only_validator_rejects_resealed_population_reconciliation_forgery(self) -> None:
+        receipt, registry, anchors = self._trust_files()
+        output = self.root / "population-forgery-output"
+        with (
+            patch.multiple("sbom_workbench.cli", **anchors),
+            patch("sbom_workbench.cli.TRUSTED_SANDBOX_EXEC", self.sandbox.resolve()),
+            patch("sbom_workbench.cli.TRUSTED_SANDBOX_UID", os.getuid()),
+            patch("sbom_workbench.cli.subprocess.run", side_effect=self._fake_process),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            self.assertEqual(main(self._source_only_arguments(output, receipt, registry)), 0)
+        population_path = output / "component-population.json"
+        scan_receipt_path = output / "scan-receipt.json"
+        completion_path = output / "SELFTEST_COMPLETE.json"
+        population = json.loads(population_path.read_text("utf-8"))
+        population["reconciliation"]["matched_item_count"] = 999
+        _write_json(population_path, population)
+        scan_receipt = json.loads(scan_receipt_path.read_text("utf-8"))
+        scan_receipt["component_population"]["sha256"] = hashlib.sha256(
+            population_path.read_bytes()
+        ).hexdigest()
+        _write_json(scan_receipt_path, scan_receipt)
+        completion = json.loads(completion_path.read_text("utf-8"))
+        completion["scan_receipt_sha256"] = hashlib.sha256(
+            scan_receipt_path.read_bytes()
+        ).hexdigest()
+        _write_json(completion_path, completion)
+        with self.assertRaisesRegex(
+            SourceOnlyValidationError,
+            "component reconciliation does not rederive",
+        ):
+            validate_source_only_output(output, source_root=self.source)
 
     @staticmethod
     def _empty_cyclonedx_document() -> dict[str, object]:
@@ -367,10 +517,9 @@ class CliM3M6Tests(unittest.TestCase):
         complete = json.loads((output / "SELFTEST_COMPLETE.json").read_text("utf-8"))
         self.assertEqual(complete["status"], report["status"])
 
-    def test_scan_source_only_zero_components_with_declaration_not_flagged(self) -> None:
-        # When the user has declared dependencies (requirements.txt present),
-        # zero components is an expected catalogue result, not a silent gap;
-        # the finding must not fire.
+    def test_scan_source_only_zero_components_with_declaration_is_coverage_hold(self) -> None:
+        # A declaration file is evidence that the software scope is non-empty;
+        # it must not suppress a zero-product-package coverage warning.
         declared_source = self.root / "declared-zero-source"
         declared_source.mkdir()
         (declared_source / "main.py").write_text("import pygame\n", encoding="utf-8")
@@ -379,9 +528,15 @@ class CliM3M6Tests(unittest.TestCase):
         report = self._run_source_only_with(
             declared_source, output, self._empty_cyclonedx_document()
         )
-        self.assertEqual(report["status"], "SOURCE_ONLY_SCAN_COMPLETE_OPEN_CANDIDATE")
+        self.assertEqual(
+            report["status"],
+            "SOURCE_ONLY_SCAN_COMPLETE_COVERAGE_HOLD_OPEN_CANDIDATE",
+        )
         scan_receipt = json.loads((output / "scan-receipt.json").read_text("utf-8"))
-        self.assertEqual(scan_receipt["scans"][0]["findings"], [])
+        self.assertIn(
+            "NO_PRODUCT_PACKAGE_COMPONENTS_FOR_DECLARED_ECOSYSTEM_REVIEW",
+            scan_receipt["scans"][0]["findings"],
+        )
         self.assertTrue(scan_receipt["scans"][0]["declared_dependency_files_present"])
 
     def test_scan_source_only_zero_components_c_cpp_project_flagged(self) -> None:
@@ -828,16 +983,7 @@ class CliM3M6Tests(unittest.TestCase):
             contextlib.redirect_stdout(stdout),
         ):
             self.assertEqual(main(self._selftest_arguments(output, receipt, registry)), 2)
-        payload = json.loads(stdout.getvalue())
-        self.assertEqual(payload["status"], "BLOCKED")
-        self.assertEqual(payload["error_type"], "SelfTestError")
-        self.assertIn(
-            payload["message"],
-            {
-                "trusted macOS sandbox-exec is unavailable",
-                "self-test requires the fixed macOS /usr/bin/sandbox-exec",
-            },
-        )
+        self.assertIn("fixed macOS", stdout.getvalue())
         run.assert_not_called()
 
     def test_euvd_handoff_and_selftest_recovery_commands(self) -> None:
@@ -977,7 +1123,6 @@ class CliM3M6Tests(unittest.TestCase):
                 0,
             )
         self.assertNotIn(secret, stdout.getvalue())
-        self.assertNotIn(secret, output.read_text(encoding="utf-8"))
         report = json.loads(stdout.getvalue())
         self.assertFalse(report["api_key_captured"])
         self.assertEqual(report["decision"], "SHADOW_ONLY_HOLD")

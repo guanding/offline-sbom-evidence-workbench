@@ -3,9 +3,9 @@
 
 The builder never copies the repository wholesale. It considers only tracked or
 non-ignored files, applies the repository's allowlist, refuses common private
-runtime/data formats, and writes an exact SHA-256 manifest. ``--strict``
-enforces the public-source license, rights, asset, and clean-worktree gates. It
-does not approve package artifacts.
+runtime/data formats, and writes an exact SHA-256 manifest. A candidate can be
+built while rights review is pending, but ``--strict`` will refuse to call it
+release-eligible until the license and rights gates are closed.
 """
 
 from __future__ import annotations
@@ -87,6 +87,13 @@ PROJECT_OWNED_ASSET_ROOTS = (
     PurePosixPath("fixtures/synthetic_orion"),
 )
 PROJECT_OWNED_ASSET_MANIFEST = PurePosixPath("release/project_owned_assets.sha256")
+INTERNAL_OBSERVATION_DATASETS = (
+    PurePosixPath("datasets/github_component_population_matrix_20260820.json"),
+    PurePosixPath("datasets/github_source_matrix_20260820.json"),
+    PurePosixPath("datasets/qwen38_aggressive_capacity_probe_20260820_r7.json"),
+    PurePosixPath("datasets/qwen38_aggressive_evaluation_20260820_r8.json"),
+    PurePosixPath("datasets/qwen38_aggressive_observation_20260820.json"),
+)
 
 
 def _git(*args: str) -> str:
@@ -224,6 +231,22 @@ def _project_owned_asset_gate(output: Path) -> tuple[bool, str | None]:
     ):
         return False, "OWNED_ASSET_RIGHTS_RECORD_MISMATCH"
 
+    excluded_records = [
+        item
+        for item in review.get("items", [])
+        if item.get("id") == "internal-self-test-observation-datasets"
+    ]
+    if len(excluded_records) != 1:
+        return False, "OWNED_ASSET_EXCLUSION_RECORD_MISMATCH"
+    excluded_record = excluded_records[0]
+    if (
+        excluded_record.get("included") is not False
+        or excluded_record.get("status") != "NOT_INCLUDED"
+        or excluded_record.get("source_paths")
+        != [path.as_posix() for path in INTERNAL_OBSERVATION_DATASETS]
+    ):
+        return False, "OWNED_ASSET_EXCLUSION_RECORD_MISMATCH"
+
     actual: dict[PurePosixPath, str] = {}
     for root in PROJECT_OWNED_ASSET_ROOTS:
         root_path = output / root
@@ -234,6 +257,8 @@ def _project_owned_asset_gate(output: Path) -> tuple[bool, str | None]:
                 return False, "OWNED_ASSET_SYMLINK"
             if path.is_file():
                 rel = PurePosixPath(path.relative_to(output).as_posix())
+                if rel in INTERNAL_OBSERVATION_DATASETS:
+                    continue
                 actual[rel] = _sha256(path)
     if actual.keys() != expected.keys():
         return False, "OWNED_ASSET_SET_MISMATCH"
@@ -330,36 +355,20 @@ def build(output: Path, strict: bool) -> int:
 
     license_present = (output / "LICENSE").is_file()
     license_consistent, license_blocking_reason = _license_gate(output)
-    source_rights_pending = _rights_pending(output)
+    rights_pending = _rights_pending(output)
     source_worktree_dirty = bool(_git("status", "--porcelain"))
-    source_eligible = (
-        license_consistent and not source_rights_pending and not source_worktree_dirty
-    )
-    source_blocking_reasons = []
+    release_eligible = license_consistent and not rights_pending and not source_worktree_dirty
+    blocking_reasons = []
     if license_blocking_reason is not None:
-        source_blocking_reasons.append(license_blocking_reason)
-    if source_rights_pending:
-        source_blocking_reasons.append("SOURCE_RIGHTS_PENDING")
+        blocking_reasons.append(license_blocking_reason)
+    if rights_pending:
+        blocking_reasons.append("THIRD_PARTY_RIGHTS_PENDING")
     if source_worktree_dirty:
-        source_blocking_reasons.append("SOURCE_WORKTREE_DIRTY")
+        blocking_reasons.append("SOURCE_WORKTREE_DIRTY")
     status = {
-        "candidate_status": (
-            "SOURCE_REPOSITORY_PUBLICATION_ELIGIBLE"
-            if source_eligible
-            else "SOURCE_REPOSITORY_PUBLICATION_BLOCKED"
-        ),
-        "source_repository_publication_eligible": source_eligible,
-        "source_repository_publication_blocking_reasons": source_blocking_reasons,
-        "github_release_eligible": False,
-        "python_artifact_distribution_eligible": False,
-        "container_distribution_eligible": False,
-        "windows_portable_distribution_eligible": False,
-        "artifact_distribution_blocking_reasons": [
-            "ARTIFACT_LICENSE_AND_NOTICE_REVIEW_PENDING",
-            "CONTROLLED_ZERO_SKIP_RELEASE_RUN_PENDING",
-            "SIGNED_PROVENANCE_PENDING",
-            "SUPPORTED_PLATFORM_RELEASE_VALIDATION_PENDING",
-        ],
+        "candidate_status": "RELEASE_ELIGIBLE_CANDIDATE" if release_eligible else "BLOCKED_RELEASE_GATES",
+        "release_eligible": release_eligible,
+        "blocking_reasons": blocking_reasons,
         "source_head": _git("rev-parse", "HEAD"),
         "source_worktree_dirty": source_worktree_dirty,
         "file_count_before_generated_metadata": len(selected),
@@ -371,12 +380,8 @@ def build(output: Path, strict: bool) -> int:
         "project_owned_asset_manifest_sha256": _sha256(
             output / PROJECT_OWNED_ASSET_MANIFEST
         ),
-        "source_rights_pending": source_rights_pending,
-        "review_model": "SOLE_MAINTAINER_SELF_REVIEW",
-        "boundary": (
-            "SOURCE_ONLY_NO_GITHUB_RELEASE_NO_PYTHON_ARTIFACT_DISTRIBUTION_"
-            "NOT_CUSTOMER_EVIDENCE_NOT_CONFORMITY"
-        ),
+        "third_party_rights_pending": rights_pending,
+        "boundary": "NOT_CUSTOMER_EVIDENCE_NOT_CONFORMITY_NOT_RELEASE_APPROVAL",
     }
     status_path = output / "PUBLIC_RELEASE_STATUS.json"
     status_path.write_text(
@@ -394,7 +399,7 @@ def build(output: Path, strict: bool) -> int:
     )
 
     print(json.dumps(status, ensure_ascii=False, indent=2))
-    if strict and not source_eligible:
+    if strict and not release_eligible:
         return 2
     return 0
 
@@ -405,10 +410,7 @@ def main() -> int:
     parser.add_argument(
         "--strict",
         action="store_true",
-        help=(
-            "return non-zero until public-source license, rights, assets, "
-            "and clean-tree gates are closed"
-        ),
+        help="return non-zero until license and third-party rights gates are closed",
     )
     args = parser.parse_args()
     try:

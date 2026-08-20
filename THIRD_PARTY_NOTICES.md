@@ -1,12 +1,10 @@
-# Third-party material register
+# Third-party material register — draft
 
-**Source repository status: APPROVED WITH EXCLUSIONS. Artifact distribution
-status: BLOCKED / NOT OFFERED.**
+**Third-party release status: NOT APPROVED FOR PUBLIC DISTRIBUTION.**
 
-This register distinguishes public Git source from separately distributed
-dependencies, packages, and other artifacts. It is not a license grant, legal
-opinion, compatibility decision, or authorization to redistribute an external
-item.
+This file is a release-preparation register. It is not a license grant, legal
+opinion, compatibility decision, or authorization to redistribute any item.
+Every entry requires named rights review against the exact release bytes.
 
 ## Project-owned material
 
@@ -44,28 +42,31 @@ The authoritative local status remains the per-artifact
 
 | Artifact | Candidate license field | Current distribution status |
 | --- | --- | --- |
-| CycloneDX 1.7 JSON Schema | `Apache-2.0` candidate | `NOT_APPROVED`; excluded from public source and artifacts |
-| SPDX 3.0.1 JSON Schema | `LICENSE_REVIEW_REQUIRED` | `NOT_APPROVED`; excluded from public source and artifacts |
-| SPDX 3.0.1 JSON-LD context | `LICENSE_REVIEW_REQUIRED` | `NOT_APPROVED`; excluded from public source and artifacts |
-| SPDX 3.0.1 ontology/SHACL model | `LICENSE_REVIEW_REQUIRED` | `NOT_APPROVED`; excluded from public source and artifacts |
+| CycloneDX 1.7 JSON Schema | `Apache-2.0` candidate | `NOT_APPROVED`; named review pending |
+| SPDX 3.0.1 JSON Schema | `LICENSE_REVIEW_REQUIRED` | `NOT_APPROVED`; named review pending |
+| SPDX 3.0.1 JSON-LD context | `LICENSE_REVIEW_REQUIRED` | `NOT_APPROVED`; named review pending |
+| SPDX 3.0.1 ontology/SHACL model | `LICENSE_REVIEW_REQUIRED` | `NOT_APPROVED`; named review pending |
 
 Technical identity, a source URL, or a matching SHA-256 does not grant
 redistribution permission. These files must be removed from public artifacts,
 acquired separately at installation/runtime under approved terms, or released
-only after the rightsholder and notice obligations are documented for the exact
-artifact.
+only after the rightsholder and notice obligations are documented by a named
+reviewer.
 
 ## Evidence, datasets, fixtures, manuals, and tools
 
 The 45 exact files under the allowlisted `schemas/`, `datasets/`, and
 `fixtures/synthetic_orion/` paths have the project-owned decision recorded
 above. A changed or additional file is unapproved until the manifest and rights
-decision are explicitly renewed. Other tracked `evidence/` and `fixtures/`,
-Office/PDF documents, rendered images, acquisition receipts, local-model
-observations outside that manifest, and generated reports require item-level
-review for source rights, customer/personal data, local paths, metadata,
-trademarks, and redistribution scope. “Synthetic” or “self-test” labels alone
-are not rights approval.
+decision are explicitly renewed. The five GitHub scan matrices and local-model
+runtime observations named by `internal-self-test-observation-datasets` in
+`release/rights_review.json` remain internal even though they are stored under
+`datasets/`; the public builder and package metadata exclude them exactly.
+Other tracked `evidence/` and `fixtures/`, Office/PDF documents, rendered
+images, acquisition receipts, local-model observations outside the approved
+manifest, and generated reports require item-level review for source rights,
+customer/personal data, local paths, metadata, trademarks, and redistribution
+scope. “Synthetic” or “self-test” labels alone are not rights approval.
 
 GitHub Actions and the pinned `uv` build frontend also require source/license
 recording in the final exact dependency and tool manifest. If an OCI artifact
@@ -80,4 +81,4 @@ Before changing this status, attach to the fixed release commit:
 2. authoritative license texts and required notices;
 3. a compatibility/obligations review;
 4. a source and rights decision for every vendored spec and tracked asset;
-5. the maintainer, date, scope, review model, and exact approved hashes.
+5. the name, date, and scope of the approving rights reviewer.

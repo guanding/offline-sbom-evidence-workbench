@@ -61,9 +61,13 @@ class BuiltArtifactTests(unittest.TestCase):
             }
             self.assertEqual(actual_assets, approved_assets)
         required_suffixes = {
+            "offline_sbom_evidence_workbench-0.6.0rc1.dist-info/METADATA",
             "share/offline-sbom-evidence-workbench/schemas/synthetic-candidate.schema.json",
             "share/offline-sbom-evidence-workbench/datasets/runtime_registry.json",
             "share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/release-a/artifacts/orion-bundle.tar",
+            "sbom_workbench/static/favicon.svg",
+            "sbom_workbench/static/index.html",
+            "sbom_workbench/web_scan.py",
         }
         for suffix in required_suffixes:
             self.assertTrue(any(name.endswith(suffix) for name in names), suffix)
@@ -123,10 +127,14 @@ import sbom_workbench
 from sbom_workbench.candidate import default_candidate_schema
 from sbom_workbench.resources import data_root
 from sbom_workbench.validation import SbomValidationError, default_spec_root
+from sbom_workbench.web_scan import DOWNLOAD_FORMATS
+from sbom_workbench.webapp import RegisteredRunStore
 
 target = Path(__import__('os').environ['PYTHONPATH']).resolve()
 assert Path(sbom_workbench.__file__).resolve().is_relative_to(target)
-assert sbom_workbench.__version__ == '0.5.0-rc.1'
+assert sbom_workbench.__version__ == '0.6.0-rc.1'
+assert 'scan-receipt' in DOWNLOAD_FORMATS
+assert RegisteredRunStore(None).list_runs() == []
 root = data_root()
 assert (root / 'datasets' / 'runtime_registry.json').is_file()
 assert default_candidate_schema().is_file()
@@ -147,7 +155,7 @@ print(json.dumps({'version': sbom_workbench.__version__, 'data_root': str(root)}
                 stderr=subprocess.PIPE,
                 text=True,
             )
-            self.assertIn('"version": "0.5.0-rc.1"', completed.stdout)
+            self.assertIn('"version": "0.6.0-rc.1"', completed.stdout)
 
     @unittest.skipUnless(os.environ.get(SDIST_ENV), f"set {SDIST_ENV} to test an already-built sdist")
     def test_sdist_contains_public_data_and_excludes_vendor_specs(self) -> None:
@@ -200,6 +208,9 @@ print(json.dumps({'version': sbom_workbench.__version__, 'data_root': str(root)}
             "/release/check_public_links.py",
             "/release/project_owned_assets.sha256",
             "/release/rights_review.json",
+            "/release/verify_public_candidate.py",
+            "/scripts/test_built_artifacts.sh",
+            "/scripts/test_public_source.sh",
         }
         for suffix in required_docs:
             self.assertTrue(any(name.endswith(suffix) for name in names), suffix)

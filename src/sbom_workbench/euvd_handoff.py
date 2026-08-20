@@ -28,6 +28,8 @@ AUTHORITY_BOUNDARY = "NO_SBOM_FACT_RELEASE_CONFORMITY_OR_REPORTING_AUTHORITY"
 KEV_BOUNDARY = "KEV_PRESENCE_IS_PRIORITIZATION_ONLY_ABSENCE_IS_NOT_NON_EXPLOITATION_PROOF"
 DECLARED_BINDING = "CALLER_DECLARED_NOT_INDEPENDENTLY_VERIFIED"
 VERIFIED_SELFTEST_BINDING = "DERIVED_FROM_VERIFIED_M3A_ROOT"
+MONITORING_PURPOSE = "PERIODIC_COMPONENT_RESCAN_CANDIDATE_ONLY"
+VERSION_APPLICABILITY_BOUNDARY = "MANUAL_REVIEW_REQUIRED"
 SELFTEST_PROFILE_IDS = frozenset(
     {"m3a-source-directory", "m3a-oci-archive", "m3a-portable-runtime"}
 )
@@ -49,6 +51,9 @@ RECEIPT_KEYS = {
     "direction",
     "reverse_fact_write",
     "automatic_art14_decision",
+    "automatic_vulnerability_confirmation",
+    "monitoring_purpose",
+    "version_applicability_boundary",
     "kev_boundary",
     "authority_boundary",
 }
@@ -117,6 +122,7 @@ def _prepare_euvd_handoff(
         "cyclonedx_sha256": source_sha256,
         "endpoint": DEFAULT_ENDPOINT,
         "direction": "SBOM_TO_EUVD_ONLY",
+        "contract_version": "1.1",
     }
     handoff_id = f"euvd-{hashlib.sha256(canonical_json_bytes(identity)).hexdigest()}"
     parent = Path(handoff_parent)
@@ -136,7 +142,7 @@ def _prepare_euvd_handoff(
             handle.flush()
             os.fsync(handle.fileno())
         receipt = {
-            "schema_version": "1.0",
+            "schema_version": "1.1",
             "classification": CLASSIFICATION,
             "handoff_id": handoff_id,
             "source_run_id": source_run_id,
@@ -159,12 +165,15 @@ def _prepare_euvd_handoff(
             "direction": "SBOM_TO_EUVD_ONLY",
             "reverse_fact_write": False,
             "automatic_art14_decision": False,
+            "automatic_vulnerability_confirmation": False,
+            "monitoring_purpose": MONITORING_PURPOSE,
+            "version_applicability_boundary": VERSION_APPLICABILITY_BOUNDARY,
             "kev_boundary": KEV_BOUNDARY,
             "authority_boundary": AUTHORITY_BOUNDARY,
         }
         write_json_atomic(stage / "receipt.json", receipt)
         complete = {
-            "schema_version": "1.0",
+            "schema_version": "1.1",
             "handoff_id": handoff_id,
             "cyclonedx_sha256": source_sha256,
             "receipt_sha256": sha256_file(stage / "receipt.json"),
@@ -343,7 +352,7 @@ def validate_euvd_handoff(
     if (
         not isinstance(receipt, dict)
         or set(receipt) != RECEIPT_KEYS
-        or receipt.get("schema_version") != "1.0"
+        or receipt.get("schema_version") != "1.1"
         or receipt.get("classification") != CLASSIFICATION
         or not isinstance(receipt.get("handoff_id"), str)
         or not re.fullmatch(r"euvd-[0-9a-f]{64}", receipt["handoff_id"])
@@ -370,6 +379,10 @@ def validate_euvd_handoff(
         or receipt.get("direction") != "SBOM_TO_EUVD_ONLY"
         or receipt.get("reverse_fact_write") is not False
         or receipt.get("automatic_art14_decision") is not False
+        or receipt.get("automatic_vulnerability_confirmation") is not False
+        or receipt.get("monitoring_purpose") != MONITORING_PURPOSE
+        or receipt.get("version_applicability_boundary")
+        != VERSION_APPLICABILITY_BOUNDARY
         or receipt.get("kev_boundary") != KEV_BOUNDARY
         or receipt.get("authority_boundary") != AUTHORITY_BOUNDARY
     ):
@@ -398,6 +411,7 @@ def validate_euvd_handoff(
         "cyclonedx_sha256": digest,
         "endpoint": DEFAULT_ENDPOINT,
         "direction": "SBOM_TO_EUVD_ONLY",
+        "contract_version": "1.1",
     }
     expected_handoff_id = (
         f"euvd-{hashlib.sha256(canonical_json_bytes(expected_identity)).hexdigest()}"
@@ -409,7 +423,7 @@ def validate_euvd_handoff(
     if (
         not isinstance(complete, dict)
         or set(complete) != COMPLETE_KEYS
-        or complete.get("schema_version") != "1.0"
+        or complete.get("schema_version") != "1.1"
         or complete.get("handoff_id") != receipt.get("handoff_id")
         or complete.get("cyclonedx_sha256") != digest
         or complete.get("receipt_sha256") != sha256_file(root / "receipt.json")
@@ -452,4 +466,6 @@ def validate_euvd_handoff(
         "source_binding_status": receipt["source_binding_status"],
         "source_reverification_status": source_reverification_status,
         "authority_boundary": AUTHORITY_BOUNDARY,
+        "monitoring_purpose": MONITORING_PURPOSE,
+        "version_applicability_boundary": VERSION_APPLICABILITY_BOUNDARY,
     }

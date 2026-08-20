@@ -4,12 +4,15 @@ import base64
 import hashlib
 import json
 import unittest
+import urllib.error
+from unittest.mock import patch
 
 from sbom_workbench.model import (
     ModelAdapterError,
     ModelDisabledError,
     OmlxModelAdapter,
     build_minimal_conflict_card,
+    _loopback_transport,
 )
 
 
@@ -95,6 +98,30 @@ class ModelAdapterTests(unittest.TestCase):
         with self.assertRaises(ModelDisabledError):
             adapter.advise(conflict_card())
         self.assertFalse(called)
+
+    def test_http_failure_preserves_status_code_without_response_body(self) -> None:
+        class FailingOpener:
+            def open(self, request, timeout):
+                raise urllib.error.HTTPError(
+                    request.full_url,
+                    507,
+                    "sensitive server detail",
+                    None,
+                    None,
+                )
+
+        with patch("sbom_workbench.model.urllib.request.build_opener", return_value=FailingOpener()):
+            with self.assertRaisesRegex(
+                ModelAdapterError,
+                "oMLX returned HTTP 507 without changing workbench state",
+            ) as raised:
+                _loopback_transport(
+                    "http://127.0.0.1:18000/v1/responses",
+                    {"Content-Type": "application/json"},
+                    b"{}",
+                    1.0,
+                )
+        self.assertNotIn("sensitive server detail", str(raised.exception))
 
     def test_enabled_adapter_requires_one_fixed_allowlisted_model(self) -> None:
         with self.assertRaisesRegex(ModelAdapterError, "exactly one allowlisted"):

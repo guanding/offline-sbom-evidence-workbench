@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SBOM Workbench">
+  <rect width="64" height="64" rx="8" fill="#061f31"/>
+  <path d="M14 15h36v34H14z" fill="none" stroke="#ef6900" stroke-width="4"/>
+  <path d="M22 25h20M22 33h20M22 41h13" stroke="#f6f8f9" stroke-width="4" stroke-linecap="square"/>
+</svg>

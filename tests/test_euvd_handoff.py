@@ -57,8 +57,18 @@ class EuvdHandoffTests(unittest.TestCase):
         self.assertEqual(before, self.source.read_bytes())
         handoff = self.root / "handoffs" / result["handoff_id"]
         receipt = json.loads((handoff / "receipt.json").read_text())
+        self.assertEqual(receipt["schema_version"], "1.1")
         self.assertFalse(receipt["reverse_fact_write"])
         self.assertFalse(receipt["automatic_art14_decision"])
+        self.assertFalse(receipt["automatic_vulnerability_confirmation"])
+        self.assertEqual(
+            receipt["monitoring_purpose"],
+            "PERIODIC_COMPONENT_RESCAN_CANDIDATE_ONLY",
+        )
+        self.assertEqual(
+            receipt["version_applicability_boundary"],
+            "MANUAL_REVIEW_REQUIRED",
+        )
 
     def test_verified_binding_is_only_self_consistent_without_source_root(self) -> None:
         result = _prepare_euvd_handoff(
@@ -135,6 +145,21 @@ class EuvdHandoffTests(unittest.TestCase):
         complete_path.write_text(json.dumps(complete), encoding="utf-8")
         with self.assertRaisesRegex(EuvdHandoffError, "receipt binding or boundary"):
             validate_euvd_handoff(handoff)
+
+        result = prepare_euvd_handoff(
+            self.source, self.root / "monitoring-handoffs", source_run_id="run-1"
+        )
+        monitoring_handoff = self.root / "monitoring-handoffs" / result["handoff_id"]
+        receipt_path = monitoring_handoff / "receipt.json"
+        complete_path = monitoring_handoff / "COMPLETE.json"
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        receipt["automatic_vulnerability_confirmation"] = True
+        receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+        complete = json.loads(complete_path.read_text(encoding="utf-8"))
+        complete["receipt_sha256"] = hashlib.sha256(receipt_path.read_bytes()).hexdigest()
+        complete_path.write_text(json.dumps(complete), encoding="utf-8")
+        with self.assertRaisesRegex(EuvdHandoffError, "receipt binding or boundary"):
+            validate_euvd_handoff(monitoring_handoff)
 
         dangling = self.root / "dangling.cdx.json"
         dangling.write_text(

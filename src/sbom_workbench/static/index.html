@@ -2,125 +2,308 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
-  <title>离线 SBOM 证据工作台</title>
+  <title>离线 SBOM 工作台</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
   <div class="shell">
     <header class="topbar">
-      <div class="brand-mark" aria-hidden="true">S</div>
-      <div>
-        <p class="eyebrow">LOCAL EVIDENCE REVIEW</p>
-        <h1>离线 SBOM 证据工作台</h1>
+      <div class="brand-mark" aria-hidden="true"><span>SB</span></div>
+      <div class="brand-copy">
+        <p class="eyebrow">OFFLINE EVIDENCE TOOLING</p>
+        <h1>离线 SBOM 工作台</h1>
       </div>
       <div class="runtime-strip" aria-live="polite">
         <span id="session-state" class="status status-warn">等待本地会话</span>
+        <span id="scanner-state" class="status status-neutral">扫描器检查中</span>
         <span id="model-state" class="status status-neutral">模型关闭</span>
       </div>
     </header>
 
-    <section class="authority-banner" role="note">
-      <strong>权限边界</strong>
-      <span>本页面只展示已登记、哈希绑定的运行。机械验证和模型建议不构成制造商授权、CAB 结论、CRA 符合或认证。</span>
+    <section class="authority-banner" role="note" aria-labelledby="authority-title">
+      <strong id="authority-title">权限边界 / Authority boundary</strong>
+      <span>生成结果是单一源码面的候选。机械验证和模型建议不构成制造商授权、产品完整性证明、CAB 结论、CRA 符合或认证。</span>
     </section>
 
-    <main class="workspace">
-      <aside class="run-panel" aria-label="已登记运行">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">REGISTERED RUNS</p>
-            <h2>运行档案</h2>
+    <nav class="view-tabs" aria-label="工作台功能" role="tablist">
+      <button id="generate-tab" class="view-tab active" type="button" role="tab" aria-selected="true" aria-controls="generate-view" tabindex="0">
+        生成 SBOM <span>Create</span>
+      </button>
+      <button id="evidence-tab" class="view-tab" type="button" role="tab" aria-selected="false" aria-controls="evidence-view" tabindex="-1">
+        查看证据 <span>Review</span>
+      </button>
+    </nav>
+
+    <main id="main-content">
+      <section id="generate-view" class="generate-view" role="tabpanel" aria-labelledby="generate-tab">
+        <div class="intro-grid">
+          <div class="intro-copy">
+            <p class="eyebrow">CREATE A SOURCE-DERIVED CANDIDATE</p>
+            <h2>选择本地源码，输出所需格式</h2>
+            <p>所选字节只进入本机临时区。扫描器在断网沙箱中运行，结果通过独立绑定验证后才可下载。</p>
           </div>
-          <span id="run-count" class="count">0</span>
+          <aside class="runtime-panel" aria-labelledby="runtime-title">
+            <div class="runtime-heading">
+              <p class="eyebrow">LOCAL RUNTIME</p>
+              <h3 id="runtime-title">扫描准备</h3>
+            </div>
+            <dl class="runtime-facts">
+              <div><dt>网络</dt><dd>断网扫描</dd></div>
+              <div><dt>格式</dt><dd>CDX · SPDX · Syft</dd></div>
+              <div><dt>保留</dt><dd>服务关闭即清除</dd></div>
+            </dl>
+            <p id="scanner-message" class="runtime-message">正在核对本地扫描器…</p>
+          </aside>
         </div>
-        <div id="run-list" class="run-list"></div>
-      </aside>
 
-      <section class="content-panel">
-        <div id="empty-state" class="empty-state">
-          <div class="empty-icon" aria-hidden="true">◎</div>
-          <h2>选择一个已登记运行</h2>
-          <p>工作台不会接受任意文件路径，也不会扫描 data_root 之外的目录。</p>
+        <ol class="workflow-steps" aria-label="生成步骤">
+          <li class="current" data-step="1"><span>1</span><strong>选择</strong><small>Select</small></li>
+          <li data-step="2"><span>2</span><strong>导入</strong><small>Intake</small></li>
+          <li data-step="3"><span>3</span><strong>扫描</strong><small>Scan</small></li>
+          <li data-step="4"><span>4</span><strong>验证与下载</strong><small>Verify</small></li>
+        </ol>
+
+        <div class="generator-layout">
+          <form id="scan-form" class="scan-form" novalidate>
+            <section class="form-section" aria-labelledby="identity-title">
+              <div class="section-index" aria-hidden="true">01</div>
+              <div class="form-section-body">
+                <div class="form-heading">
+                  <div>
+                    <p class="eyebrow">DECLARED IDENTITY</p>
+                    <h3 id="identity-title">声明项目身份</h3>
+                  </div>
+                  <span class="boundary-tag">操作者声明</span>
+                </div>
+                <p class="form-help">这些字段进入候选元数据，但不会被当作独立验证的产品或发布身份。</p>
+                <div class="field-grid">
+                  <div class="field">
+                    <label for="product-name">项目或产品名称</label>
+                    <input id="product-name" name="product_name" type="text" maxlength="128" autocomplete="off" required aria-describedby="product-help">
+                    <small id="product-help">例如：Battery Gateway</small>
+                  </div>
+                  <div class="field">
+                    <label for="declared-version">版本或快照标签</label>
+                    <input id="declared-version" name="declared_version" type="text" maxlength="128" autocomplete="off" required aria-describedby="version-help">
+                    <small id="version-help">例如：2.4.0-rc1</small>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="form-section" aria-labelledby="format-title">
+              <div class="section-index" aria-hidden="true">02</div>
+              <div class="form-section-body">
+                <div class="form-heading">
+                  <div>
+                    <p class="eyebrow">OUTPUT FORMAT</p>
+                    <h3 id="format-title">选择默认输出格式</h3>
+                  </div>
+                </div>
+                <fieldset class="format-options">
+                  <legend class="visually-hidden">默认输出格式</legend>
+                  <label class="format-option">
+                    <input type="radio" name="output_format" value="cyclonedx-json" checked>
+                    <span class="format-main"><strong>CycloneDX JSON</strong><small>推荐用于漏洞管理与 EUVD 交接</small></span>
+                    <span class="format-code">CDX 1.7</span>
+                  </label>
+                  <label class="format-option">
+                    <input type="radio" name="output_format" value="spdx-json">
+                    <span class="format-main"><strong>SPDX JSON</strong><small>适用于 SPDX 生态交换</small></span>
+                    <span class="format-code">SPDX</span>
+                  </label>
+                  <label class="format-option">
+                    <input type="radio" name="output_format" value="syft-json">
+                    <span class="format-main"><strong>Syft JSON</strong><small>保留扫描器原生结构的派生副本</small></span>
+                    <span class="format-code">NATIVE</span>
+                  </label>
+                </fieldset>
+              </div>
+            </section>
+
+            <section class="form-section" aria-labelledby="source-title">
+              <div class="section-index" aria-hidden="true">03</div>
+              <div class="form-section-body">
+                <div class="form-heading">
+                  <div>
+                    <p class="eyebrow">SOURCE SNAPSHOT</p>
+                    <h3 id="source-title">选择文件或文件夹</h3>
+                  </div>
+                  <span id="selection-limit" class="boundary-tag">读取限制中</span>
+                </div>
+                <div id="source-picker" class="source-picker">
+                  <input id="files-input" class="visually-hidden" type="file" multiple tabindex="-1" aria-label="选择一个或多个源码文件">
+                  <input id="folder-input" class="visually-hidden" type="file" webkitdirectory directory multiple tabindex="-1" aria-label="选择源码文件夹">
+                  <div class="picker-mark" aria-hidden="true">＋</div>
+                  <div class="picker-copy">
+                    <strong>从本机创建源码字节快照</strong>
+                    <span>文件不会发送到网络；浏览器选择不会保留符号链接、硬链接、所有权或可执行位。</span>
+                  </div>
+                  <div class="picker-actions">
+                    <button id="choose-files" class="secondary-button" type="button">选择文件</button>
+                    <button id="choose-folder" class="primary-button compact" type="button">选择文件夹</button>
+                  </div>
+                </div>
+
+                <div id="selection-summary" class="selection-summary hidden" aria-live="polite">
+                  <div>
+                    <p class="eyebrow">SELECTED SCOPE</p>
+                    <strong id="selection-name">—</strong>
+                    <span id="selection-stats">—</span>
+                  </div>
+                  <button id="clear-selection" class="text-button" type="button">重新选择</button>
+                </div>
+                <p id="source-error" class="field-error hidden" role="alert"></p>
+              </div>
+            </section>
+
+            <div class="submit-row">
+              <p>开始后依次执行：受限导入、exact-set 固定、断网扫描、source-only 独立验证和隐私投影。</p>
+              <button id="start-scan" class="primary-button" type="submit" disabled>生成 SBOM 候选</button>
+            </div>
+          </form>
+
+          <aside class="process-column" aria-label="扫描状态">
+            <section id="process-panel" class="process-panel" aria-labelledby="process-title">
+              <div class="process-top">
+                <div>
+                  <p class="eyebrow">PROCESS STATUS</p>
+                  <h3 id="process-title">等待源码选择</h3>
+                </div>
+                <span id="process-percent" class="process-percent">0%</span>
+              </div>
+              <div class="progress-track" aria-hidden="true"><span id="progress-fill"></span></div>
+              <ol id="process-list" class="process-list">
+                <li data-process="prepare"><span></span><div><strong>准备导入</strong><small>核对声明与资源预算</small></div></li>
+                <li data-process="upload"><span></span><div><strong>复制所选字节</strong><small>写入本机会话临时区</small></div></li>
+                <li data-process="scan"><span></span><div><strong>断网扫描</strong><small>Syft 固定运行时</small></div></li>
+                <li data-process="verify"><span></span><div><strong>验证并投影</strong><small>绑定复验与本机路径清理</small></div></li>
+              </ol>
+              <p id="process-detail" class="process-detail">选择范围后即可开始。</p>
+            </section>
+
+            <section id="scan-error-panel" class="result-panel error-result hidden" aria-live="assertive">
+              <p class="eyebrow">BLOCKED</p>
+              <h3>未生成可下载候选</h3>
+              <p id="scan-error-message"></p>
+              <button id="retry-scan" class="secondary-button" type="button">检查后重新开始</button>
+            </section>
+
+            <section id="scan-result" class="result-panel hidden" aria-live="polite">
+              <div class="result-heading">
+                <div>
+                  <p class="eyebrow">VALIDATED CANDIDATE</p>
+                  <h3>候选已生成</h3>
+                </div>
+                <span id="result-status" class="status status-neutral">NOT_ASSESSED</span>
+              </div>
+              <div class="result-metric">
+                <strong id="result-components">0</strong>
+                <span>扫描组件候选</span>
+              </div>
+              <dl class="result-facts">
+                <div><dt>覆盖门</dt><dd id="result-coverage">—</dd></div>
+                <div><dt>总体对账</dt><dd id="result-population">—</dd></div>
+                <div><dt>来源 exact-set</dt><dd id="result-source-hash">—</dd></div>
+                <div><dt>完成锚</dt><dd id="result-completion-hash">—</dd></div>
+              </dl>
+              <div id="download-list" class="download-list"></div>
+              <p class="result-boundary">下载文件已替换已知本机会话路径，但仍需在交付前进行隐私、权利、组件完整性和制造商授权复核。</p>
+              <button id="discard-job" class="text-button danger-text" type="button">清除本次临时数据</button>
+            </section>
+          </aside>
         </div>
+      </section>
 
-        <div id="dashboard" class="dashboard hidden">
-          <section class="run-hero">
-            <div>
-              <p class="eyebrow">RUN CLASSIFICATION</p>
-              <div class="title-line">
-                <h2 id="run-title">—</h2>
-                <span id="classification" class="classification">—</span>
-              </div>
-              <p id="run-subtitle" class="muted">—</p>
-            </div>
-            <div class="hero-metric">
-              <span>组件候选</span>
-              <strong id="component-count">0</strong>
-            </div>
-          </section>
-
-          <section class="section-card">
-            <div class="section-heading">
+      <section id="evidence-view" class="evidence-view hidden" role="tabpanel" aria-labelledby="evidence-tab">
+        <div class="evidence-intro">
+          <div>
+            <p class="eyebrow">HASH-BOUND REVIEW</p>
+            <h2>查看已登记证据运行</h2>
+          </div>
+          <p>此区域保持只读，只展示启动时登记并通过哈希绑定的运行。</p>
+        </div>
+        <div class="workspace">
+          <aside class="run-panel" aria-label="已登记运行">
+            <div class="panel-heading">
               <div>
-                <p class="eyebrow">RELEASE IDENTITY</p>
-                <h3>发布绑定</h3>
+                <p class="eyebrow">REGISTERED RUNS</p>
+                <h3>运行档案</h3>
               </div>
-              <span class="boundary-tag">只读</span>
+              <span id="run-count" class="count">0</span>
             </div>
-            <dl id="release-grid" class="detail-grid"></dl>
-          </section>
+            <div id="run-list" class="run-list"></div>
+          </aside>
 
-          <section class="section-card">
-            <div class="section-heading">
-              <div>
-                <p class="eyebrow">COMPONENT POPULATION</p>
-                <h3>组件总体与候选</h3>
-              </div>
-              <span class="boundary-tag">不代表完整性</span>
+          <section class="content-panel">
+            <div id="empty-state" class="empty-state">
+              <div class="empty-icon" aria-hidden="true">◎</div>
+              <h3>选择一个已登记运行</h3>
+              <p>证据查看器不接受任意文件路径，也不会扫描 data_root 之外的目录。</p>
             </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>组件</th>
-                    <th>版本</th>
-                    <th>生产者</th>
-                    <th>标识符</th>
-                    <th>状态</th>
-                  </tr>
-                </thead>
-                <tbody id="components-body"></tbody>
-              </table>
+
+            <div id="dashboard" class="dashboard hidden">
+              <section class="run-hero">
+                <div>
+                  <p class="eyebrow">RUN CLASSIFICATION</p>
+                  <div class="title-line">
+                    <h2 id="run-title">—</h2>
+                    <span id="classification" class="classification">—</span>
+                  </div>
+                  <p id="run-subtitle" class="muted">—</p>
+                </div>
+                <div class="hero-metric">
+                  <span>组件候选</span>
+                  <strong id="component-count">0</strong>
+                </div>
+              </section>
+
+              <section class="section-card">
+                <div class="section-heading">
+                  <div><p class="eyebrow">RELEASE IDENTITY</p><h3>发布绑定</h3></div>
+                  <span class="boundary-tag">只读</span>
+                </div>
+                <dl id="release-grid" class="detail-grid"></dl>
+              </section>
+
+              <section class="section-card">
+                <div class="section-heading">
+                  <div><p class="eyebrow">COMPONENT POPULATION</p><h3>组件总体与候选</h3></div>
+                  <span class="boundary-tag">不代表完整性</span>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>组件</th><th>版本</th><th>生产者</th><th>标识符</th><th>状态</th></tr></thead>
+                    <tbody id="components-body"></tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section class="section-card">
+                <div class="section-heading">
+                  <div><p class="eyebrow">RECONCILIATION</p><h3>多源对账</h3></div>
+                  <span id="reconciliation-status" class="status status-neutral">UNKNOWN</span>
+                </div>
+                <dl id="reconciliation-grid" class="detail-grid compact"></dl>
+                <div id="conflict-list" class="conflict-list"></div>
+              </section>
+
+              <section class="section-card">
+                <div class="section-heading">
+                  <div><p class="eyebrow">VALIDATION</p><h3>机械验证</h3></div>
+                  <span id="validation-status" class="status status-neutral">NOT_ASSESSED</span>
+                </div>
+                <dl id="validation-grid" class="detail-grid compact"></dl>
+                <p class="validation-note">格式或规则 PASS 仅说明相应机械检查通过，不证明组件完整、事实正确、已获批准或 CRA 符合。</p>
+              </section>
+
+              <section id="authority-boundary" class="final-boundary" aria-live="polite"></section>
             </div>
           </section>
-
-          <section class="section-card">
-            <div class="section-heading">
-              <div>
-                <p class="eyebrow">RECONCILIATION</p>
-                <h3>多源对账</h3>
-              </div>
-              <span id="reconciliation-status" class="status status-neutral">UNKNOWN</span>
-            </div>
-            <dl id="reconciliation-grid" class="detail-grid compact"></dl>
-            <div id="conflict-list" class="conflict-list"></div>
-          </section>
-
-          <section class="section-card">
-            <div class="section-heading">
-              <div>
-                <p class="eyebrow">VALIDATION</p>
-                <h3>机械验证</h3>
-              </div>
-              <span id="validation-status" class="status status-neutral">NOT_ASSESSED</span>
-            </div>
-            <dl id="validation-grid" class="detail-grid compact"></dl>
-            <p class="validation-note">格式或规则 PASS 仅说明相应机械检查通过，不证明组件完整、事实正确、已获批准或 CRA 符合。</p>
-          </section>
-
-          <section id="authority-boundary" class="final-boundary" aria-live="polite"></section>
         </div>
       </section>
     </main>

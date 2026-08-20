@@ -1,66 +1,100 @@
-# Public source and artifact release checklist
+# Public release checklist
 
-## Current state
+**Current readiness: BLOCKED. Do not create a public repository or GitHub
+Release from the current candidate.**
 
-| Lane | Status |
-| --- | --- |
-| Public GitHub source repository | **ELIGIBLE** when the fixed clean commit passes current CI and the strict source-candidate gate |
-| GitHub Release or signed tag | **BLOCKED / NOT OFFERED** |
-| Wheel or sdist publication | **BLOCKED / NOT OFFERED** |
-| Container or portable artifact | **NOT OFFERED** |
-| Customer delivery or conformity evidence | **OUT OF SCOPE** |
+Copy this checklist into the release record for one fixed commit and exact
+artifact set. Do not inherit checkmarks from an older build.
 
-Repository visibility and artifact distribution are separate decisions. Making
-the source repository public does not approve a GitHub Release, wheel, sdist,
-evidence pack, customer delivery, or CRA conclusion.
+## Repository and governance
 
-## Solo-maintainer record
+- [ ] GitHub remote ownership, visibility, branch protection, and required
+      checks are approved.
+- [ ] `CODEOWNERS` resolves to at least two active, independent reviewers for
+      release-sensitive paths.
+- [ ] Named security and conduct contacts, including alternates, are configured.
+- [ ] `SECURITY.md`, `SUPPORT.md`, contribution terms, and response targets match
+      the versions actually offered.
+- [ ] Issue/PR templates were tested on the public repository.
 
-Ding Guan (`@guanding`) is the copyright holder, repository owner, source
-rights declarant, security contact, and conduct moderator. The project has no
-second reviewer or alternate contact. Source-publication decisions are
-therefore maintainer self-review and must not be described as independent or
-four-eye approval.
+## Rights
 
-## Source repository visibility gate
+Standing decision: project source code, documentation, and the allowlisted
+`schemas/`, `datasets/`, and `fixtures/synthetic_orion/` assets owned by Ding
+Guan are licensed under Apache-2.0. The checkbox below verifies one fixed
+release and `release/project_owned_assets.sha256`; it does not approve
+referenced third-party objects, third-party material, or any other asset path.
 
-For the exact commit made public:
+- [ ] The exact release contains the official Apache-2.0 `LICENSE` and
+      `Copyright 2026 Ding Guan` in `NOTICE`, and package/documentation metadata
+      agrees.
+- [ ] Direct and transitive dependency licenses, required notices, source-offer
+      obligations, and compatibility were independently reviewed.
+- [ ] Every vendored CycloneDX/SPDX artifact has explicit redistribution
+      approval or is absent from the release bytes.
+- [ ] Evidence, datasets, fixtures, manuals, images, reports, acquisition
+      receipts, and model/runtime records each have an approved public status or
+      are excluded.
+- [ ] The rights reviewer approved the exact wheel/sdist hashes before any
+      separate manual distribution operation; verification-only CI remains
+      unable to upload those artifacts.
+- [ ] `THIRD_PARTY_NOTICES.md` names the reviewer, date, scope, and exact bytes;
+      no `NOT_APPROVED` or `AWAITING_NAMED_REVIEW` item remains.
 
-- [ ] the worktree is clean and `release/build_public_candidate.py --strict`
-      reports `source_repository_publication_eligible: true`;
-- [ ] current CI and security workflows pass from a clean clone;
-- [ ] the Apache-2.0 `LICENSE`, `NOTICE`, package metadata, source rights
-      record, and 45-file project-owned asset manifest agree;
-- [ ] the explicit allowlist excludes vendored CycloneDX/SPDX specs, runtime,
-      evidence, controlled PRO-03B inputs, customer data, local models, and secrets;
-- [ ] the Git history and public Actions logs/artifacts contain no customer,
-      credential, local-path, or internal-only material;
-- [ ] no workflow can publish a Release, package, image, or evidence pack;
-- [ ] GitHub private vulnerability reporting is enabled after visibility changes;
-- [ ] README, SECURITY, and SUPPORT describe an unreleased source preview with
-      no SLA and no conformity/customer-evidence claim.
+## Repository and data hygiene
 
-A single CODEOWNER is valid for this project. Automated checks are technical
-gates, not independent approval.
+- [ ] A clean public clone contains no customer evidence, proprietary source,
+      model secret, runtime state, credential, private key, personal data,
+      machine-specific path, or internal-only planning material.
+- [ ] An approved scanner checked the current tree and full Git history.
+- [ ] Binaries, Office/PDF files, archives, generated reports, evidence packs,
+      wheel/sdist contents, and metadata were inspected separately.
+- [ ] The public artifact set is generated from an explicit allowlist.
 
-## Artifact distribution gate
+## Build and security
 
-Keep wheel, sdist, and GitHub Release lanes blocked until the exact proposed
-bytes have:
+- [ ] CI passes from a clean clone on the declared Python 3.12 lane.
+- [ ] The public-source lane's explicit skip taxonomy is reviewed; the final
+      controlled RC run supplies approved BYO specs, PRO-03B fixture, built
+      artifacts, and loopback support, and has no unexplained or allowed skips.
+- [ ] `uv.lock` is frozen and the exact `uv` version/tool identity is recorded.
+- [ ] Wheel and sdist build reproducibly; the installed wheel works outside the
+      source checkout and contains all required offline resources.
+- [ ] The graphical source-scan flow passes desktop and mobile browser tests,
+      keyboard/focus and reduced-motion checks, loopback security tests, and a
+      real pinned-Syft folder scan with all download hashes independently
+      verified.
+- [ ] Browser intake limits, temporary-data cleanup, privacy projection, and
+      the source-only/coverage-HOLD authority boundary match the documented
+      release bytes.
+- [ ] Dependabot is active and dependency audit has no unresolved prohibited
+      finding.
+- [ ] CodeQL default setup or an advanced workflow with reviewed full action
+      SHAs completed successfully.
+- [ ] All Actions use verified full commit SHAs and least-privilege permissions.
+- [ ] If an OCI artifact exists, a reviewed digest-pinned scanner reports zero
+      unwaived critical/high findings or approved time-bounded exceptions.
 
-- [ ] a complete direct/transitive license, notice, compatibility, and
-      source-obligation review;
-- [ ] confirmed exclusion or explicit redistribution approval for every
-      vendored specification and other third-party input;
-- [ ] the controlled zero-skip test lane and supported-platform reproduction;
-- [ ] an exact manifest, hashes, SBOM, provenance/attestation, and signature;
-- [ ] installation and offline-resource checks outside the source checkout;
-- [ ] support, maintenance, rollback, and disclosure terms for the version;
-- [ ] a recorded maintainer authorization naming the exact commit and hashes.
+## Version and artifacts
 
-If an independent reviewer is unavailable, do not invent one. Record
-`SOLE_MAINTAINER_SELF_REVIEW` and the resulting assurance limitation.
+- [ ] Package metadata, module version, documentation, release notes, tag, and
+      artifact filenames use one approved version.
+- [ ] CHANGELOG/release notes describe security, compatibility, migration, and
+      known limitations.
+- [ ] Each artifact has a SHA-256, exact-set manifest, SPDX or CycloneDX SBOM,
+      provenance/attestation, and verifiable signature.
+- [ ] A separate reviewer reproduced installation and the documented synthetic
+      demonstration from downloaded release artifacts.
+- [ ] The signed annotated tag points to the reviewed commit, and the GitHub
+      Release contains only reviewed artifact hashes.
 
-CI success, an SBOM, a hash, or a signature does not by itself authorize
-artifact distribution or establish customer delivery, certification, or
-conformity.
+## Approval
+
+- [ ] Release owner: name, date, fixed commit.
+- [ ] Rights reviewer: name, date, approved artifact hashes.
+- [ ] Security/supply-chain reviewer: name, date, approved artifact hashes.
+- [ ] Post-release verification and rollback/revocation owner are recorded.
+
+CI success, an SBOM, a hash, a signature, or historical test evidence does not
+by itself satisfy this checklist or establish customer delivery, certification,
+or conformity.

@@ -11,4 +11,4 @@ include SUPPORT.md
 include THIRD_PARTY_NOTICES.md
 recursive-include docs USER_GUIDE.md SYNTHETIC_MVP_ACCEPTANCE.md
 recursive-include release *.json *.md *.py *.sha256 *.txt
-recursive-include scripts normalize_sdist.py test_built_artifacts.sh
+recursive-include scripts normalize_sdist.py test_built_artifacts.sh test_public_source.sh

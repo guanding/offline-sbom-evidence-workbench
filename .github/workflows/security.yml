@@ -163,13 +163,15 @@ jobs:
           project = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))["project"]
           if project.get("license") != "Apache-2.0":
               raise SystemExit("pyproject license expression is not Apache-2.0")
-          if project.get("license-files") != ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]:
+          expected_license_files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]
+          if project.get("license-files") != expected_license_files:
               raise SystemExit(
-                  "pyproject license-files must contain LICENSE, NOTICE, and THIRD_PARTY_NOTICES.md"
+                  "pyproject license-files must exactly contain LICENSE, NOTICE, "
+                  "and THIRD_PARTY_NOTICES.md"
               )
           print("Project license, notice, and package metadata are consistent.")
           PY
-          if grep -Fq '"distribution_status": "NOT_APPROVED"' vendor/specs/SOURCE_MANIFEST.json; then
+          if [ -f vendor/specs/SOURCE_MANIFEST.json ] && grep -Fq '"distribution_status": "NOT_APPROVED"' vendor/specs/SOURCE_MANIFEST.json; then
             echo "::warning::Vendored specifications remain NOT_APPROVED for distribution."
           fi
 

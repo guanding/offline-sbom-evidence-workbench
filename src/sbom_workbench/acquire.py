@@ -117,6 +117,62 @@ def _validate_acquisition_report_shape(report: Any) -> dict[str, Any]:
     return report
 
 
+def load_trusted_acquisition_receipt(
+    receipt_path: Path,
+    trusted_sha256: str,
+) -> dict[str, Any]:
+    """Load one acquisition receipt under an external SHA-256 trust anchor.
+
+    This validates only the acquisition receipt's syntax and cryptographic
+    identity.  Callers must separately bind ``tree_manifest`` to the source
+    tree they consume; the receipt never establishes rights or release status.
+    """
+
+    path = Path(receipt_path)
+    try:
+        info = path.lstat()
+    except OSError as exc:
+        raise AcquisitionError("source acquisition receipt is unavailable") from exc
+    if (
+        path.is_symlink()
+        or not stat.S_ISREG(info.st_mode)
+        or info.st_nlink != 1
+        or info.st_size <= 0
+        or info.st_size > 256 * 1024 * 1024
+    ):
+        raise AcquisitionError(
+            "source acquisition receipt must be one bounded single-link regular file"
+        )
+    if not _is_lower_hex(trusted_sha256, 64):
+        raise AcquisitionError(
+            "source acquisition receipt requires an external SHA-256 trust anchor"
+        )
+    observed_sha256 = sha256_file(path)
+    if observed_sha256 != trusted_sha256:
+        raise AcquisitionError(
+            "source acquisition receipt does not match the external trust anchor"
+        )
+
+    def reject_duplicates(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        value: dict[str, Any] = {}
+        for key, item in pairs:
+            if key in value:
+                raise AcquisitionError(
+                    f"source acquisition receipt contains duplicate JSON key: {key}"
+                )
+            value[key] = item
+        return value
+
+    try:
+        report = json.loads(
+            path.read_bytes().decode("utf-8"),
+            object_pairs_hook=reject_duplicates,
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise AcquisitionError("source acquisition receipt is not strict JSON") from exc
+    return _validate_acquisition_report_shape(report)
+
+
 def _git_binary() -> Path:
     candidate = shutil.which("git", path=os.defpath)
     if candidate is None:

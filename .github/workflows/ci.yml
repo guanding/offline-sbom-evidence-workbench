@@ -51,16 +51,29 @@ jobs:
       - name: Lint
         run: >-
           "${RUNNER_TEMP}/ci-tools/bin/ruff" check src tests scripts tools release
-      - name: Run unit tests
-        env:
-          SBOM_WORKBENCH_REQUIRE_LOOPBACK_TESTS: "1"
-        run: >-
-          "${RUNNER_TEMP}/ci-tools/bin/uv" run --frozen python
-          release/run_public_tests.py
       - name: Build and scan the explicit public-source candidate
         run: python release/build_public_candidate.py --output "${{ runner.temp }}/public-candidate"
+      - name: Verify public-candidate exact set and hashes
+        run: python release/verify_public_candidate.py "${{ runner.temp }}/public-candidate"
       - name: Verify public-candidate Markdown links
         run: python release/check_public_links.py "${{ runner.temp }}/public-candidate"
+      - name: Install public-candidate dependencies without building the project
+        working-directory: ${{ runner.temp }}/public-candidate
+        env:
+          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/public-candidate-venv
+        run: >-
+          "${RUNNER_TEMP}/ci-tools/bin/uv" sync --frozen --no-install-project
+          --python "${{ matrix.python-version }}"
+      - name: Run public-source unit tests from the explicit candidate
+        working-directory: ${{ runner.temp }}/public-candidate
+        env:
+          PYTHONPATH: ${{ runner.temp }}/public-candidate/src:${{ runner.temp }}/public-candidate
+          SBOM_WORKBENCH_REQUIRE_LOOPBACK_TESTS: "1"
+        run: >-
+          "${{ runner.temp }}/public-candidate-venv/bin/python" -B
+          release/run_public_tests.py
+      - name: Verify tests did not mutate the public candidate
+        run: python release/verify_public_candidate.py "${{ runner.temp }}/public-candidate"
 
   package-smoke:
     name: Build and install wheel/sdist

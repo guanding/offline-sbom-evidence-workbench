@@ -2,12 +2,13 @@
 
 ## Current contribution boundary
 
-Project-owned content is licensed under Apache License 2.0. Unless explicitly
-stated otherwise, contributions intentionally submitted for inclusion are
-provided under Section 5 of that license. Contributors must have the right to
-submit their work and must not submit customer, confidential, or unapproved
-third-party material. This is a single-maintainer public-source project; no
-response time or acceptance is promised.
+Project source code and documentation owned by Ding Guan are licensed under
+Apache License 2.0. Unless explicitly stated otherwise, contributions
+intentionally submitted for inclusion are provided under Section 5 of that
+license. Contributors must have the right to submit their work and must not
+submit customer, confidential, or unapproved third-party material. Repository
+publication, support channels, and contribution intake remain subject to the
+release gates in `PUBLIC_RELEASE_CHECKLIST.md`.
 
 ## Development checks
 
@@ -35,19 +36,17 @@ establish release or customer-delivery approval.
 - Use synthetic or explicitly redistributable fixtures.
 - Never commit customer evidence, credentials, proprietary source, local model
   data, private runtime state, or machine-specific paths.
-- Record source, version, cryptographic hash, license candidate, and
+- Record source, version, cryptographic hash, license candidate, and named
   redistribution decision for every copied or generated third-party asset.
 - Treat `NOT_APPROVED` and `AWAITING_NAMED_REVIEW` as fail-closed states.
 - Preserve the distinctions between engineering validation, release approval,
   customer evidence, and conformity assessment.
 
-The PR template is the minimum evidence set. Ding Guan (`@guanding`) is the
-sole reviewer. Reviews are maintainer self-review unless an external review is
-explicitly recorded. Artifact distribution follows the separate blocked lane
-in `RELEASE_PROCESS.md`.
+The PR template is the minimum evidence set. Release-affecting changes require
+a second independent reviewer under `RELEASE_PROCESS.md`.
 
 ## Commit and review expectations
 
 Write focused commits with an imperative summary. Do not rewrite another
-contributor's history. A CODEOWNER review routes responsibility and does not
-claim independent rights, security, or artifact-release approval.
+contributor's history. A CODEOWNER review routes responsibility but does not
+replace rights review, security review, or release approval.

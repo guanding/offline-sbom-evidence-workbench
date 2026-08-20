@@ -1,70 +1,96 @@
 # Release process
 
-## Two independent lanes
+## Release state
 
-### Lane A — public source repository
+Project-owned source code, documentation, and the allowlisted `schemas/`,
+`datasets/`, and `fixtures/synthetic_orion/` assets are licensed under
+Apache-2.0, Copyright 2026 Ding Guan, for the exact bytes in
+`release/project_owned_assets.sha256`. Third-party facts, names, trademarks,
+tools, models, sources, and artifacts referenced by the datasets are not
+relicensed. Public release remains blocked because vendored specifications are
+explicitly `NOT_APPROVED`, dependency/build/Action licenses still require named
+review, other tracked evidence/assets remain excluded or pending, and CodeQL is
+not enabled. Local wheel/sdist and installed-resource smoke tests pass for the
+current candidate. The build backend and CI tools are pinned, and release
+builds normalize wheel/sdist timestamps and sdist owner/group fields;
+independent clean-environment reproducibility and supported-platform checks
+remain required.
 
-The Apache-2.0 project source and the exact project-owned assets listed in
-`release/project_owned_assets.sha256` may be made publicly visible from a
-fixed clean commit after the strict source-candidate gate and current CI pass.
-This lane publishes Git source only. It does not publish or approve a GitHub
-Release, wheel, sdist, evidence pack, customer deliverable, or conformity
-evidence.
+No automated publishing workflow is provided while those conditions remain.
+A workflow artifact, local wheel, evidence pack, SBOM, signature, or green CI
+run is a candidate only.
 
-### Lane B — versioned artifacts
+CI builds and installs wheel/sdist candidates for verification but has no step
+that uploads them. Distribution requires a separate manual operation designed
+and reviewed for one fixed commit and pre-approved exact artifact hashes.
 
-This lane is currently **BLOCKED / NOT OFFERED**. CI may build and install
-wheel/sdist candidates for verification, but it must not upload them. Artifact
-rights, provenance, signatures, supported-platform tests, support terms, and
-exact hashes require a separate decision.
+## Roles
 
-## Current roles and assurance
+Assign named people for each release:
 
-Ding Guan (`@guanding`) is the sole maintainer, copyright holder, source
-rights declarant, security contact, and conduct moderator. There is no alternate
-or independent reviewer. Source publication is explicitly recorded as
-`SOLE_MAINTAINER_SELF_REVIEW`; CODEOWNERS and CI do not turn it into
-independent approval.
+- **Release owner:** fixes the commit and exact artifact set.
+- **Rights reviewer:** approves the project license, dependencies, vendored
+  specifications, data, documents, images, fixtures, and notices.
+- **Security/supply-chain reviewer:** independently reviews secret scans,
+  vulnerabilities, build provenance, SBOMs, and signatures.
 
-Independent review may be requested for a future artifact, but it is not a
-condition imposed on public source visibility and must never be fabricated.
+The rights reviewer and security/supply-chain reviewer must not both be
+replaced by the release owner. CODEOWNERS routing alone is insufficient.
 
-## Source-publication procedure
+## Procedure
 
-1. Freeze a clean commit and confirm the explicit public allowlist and the
-   45-file project-owned asset manifest.
-2. Run the strict candidate builder; verify the exact-set manifest and source
-   visibility status.
-3. Scan the clean tree and its short public history for secrets, customer data,
-   local paths, private runtime state, vendored specs, and excluded evidence.
-4. Run the current CI/security workflows. They may build wheel/sdist candidates
-   for tests but must not upload them.
-5. Confirm README, LICENSE, NOTICE, package metadata, THIRD_PARTY_NOTICES,
-   SECURITY, SUPPORT, and contribution terms agree with the source-only boundary.
-6. Change repository visibility to public, enable private vulnerability
-   reporting and CodeQL default setup, then verify the public clone and checks.
+1. **Freeze scope.** Start from a clean protected branch, record the commit
+   SHA, version, supported Python versions/platforms, and artifact allowlist.
+2. **Close rights gates.** Verify the recorded Apache-2.0 grant and NOTICE are
+   present in the exact release bytes. Approve `THIRD_PARTY_NOTICES.md`; remove
+   every unapproved asset or vendored spec.
+3. **Sanitize.** Scan the current tree, full Git history, binaries, archives,
+   Office/PDF metadata, generated outputs, evidence, datasets, and wheel/sdist
+   contents for secrets, personal/customer data, local paths, and internal-only
+   material.
+4. **Verify packages.** From a clean clone, reproduce the locked environment on
+   the supported Python matrix. Build wheel and sdist, install the wheel outside
+   the source checkout, and exercise required offline schemas/specifications.
+   First review the public-source lane's explicit skip taxonomy; then run the
+   controlled RC with approved BYO specs, PRO-03B fixture, built artifacts, and
+   loopback support, requiring zero unexplained or allowed skips. Exercise the
+   graphical file and folder flows in a real browser, verify responsive and
+   keyboard behavior, re-hash every download, and inspect the scan receipt and
+   privacy-projected outputs for local-path disclosure.
+5. **Run security gates.** Complete dependency audit, CodeQL, approved
+   full-history secret scanning, and artifact scanning. If an OCI image is
+   introduced, add a reviewed digest-pinned container scanner.
+6. **Create evidence.** Produce checksums, an exact-set manifest, SPDX or
+   CycloneDX release SBOMs, provenance/attestations, and signatures for every
+   released artifact.
+7. **Independent review.** Both reviewers examine the fixed commit and final
+   artifact hashes. Rebuilding after review invalidates that approval.
+8. **Authorize distribution.** Only after the rights reviewer approves the
+   exact distribution hashes, perform a separately reviewed manual upload for
+   the fixed commit. Do not add or enable a repository-wide boolean bypass in
+   the verification CI workflow.
+9. **Publish.** Create a signed annotated tag and GitHub Release only after all
+   items in `PUBLIC_RELEASE_CHECKLIST.md` are complete.
+10. **Post-release.** Verify downloads, hashes, signatures, installation,
+   documentation, and vulnerability-reporting access from a separate machine.
+   Record the rollback or revocation path.
 
-## Future artifact procedure
+## Expected artifacts
 
-Before any tag, GitHub Release, wheel, or sdist:
+At minimum, an approved release should contain a controlled source archive,
+wheel, sdist, checksums, release notes, dependency notices, SBOMs, and
+provenance. Evidence packs, datasets, manuals, screenshots, model/runtime
+records, and vendored standards are excluded unless individually listed in the
+approved allowlist with redistribution evidence.
 
-1. freeze the exact commit, platform matrix, and artifact allowlist;
-2. review every direct/transitive dependency and build input for authoritative
-   licenses, notices, compatibility, and source obligations;
-3. keep vendored CycloneDX/SPDX specifications excluded unless explicit
-   redistribution rights are documented;
-4. reproduce the controlled zero-skip lane, build/install tests, and supported
-   platform checks;
-5. generate exact manifests, hashes, SBOMs, provenance/attestations, and
-   signatures;
-6. record support, rollback, revocation, and disclosure terms;
-7. authorize only the named hashes, with the review model honestly labeled.
+GitHub-generated source snapshots must be evaluated separately from controlled
+release archives because their byte set and timestamps may differ.
 
-Rebuilding after authorization invalidates the artifact decision.
-GitHub-generated source snapshots are not controlled artifact releases.
+## CodeQL activation
 
-## CodeQL
-
-The repository contains the intended CodeQL scope configuration. Enable GitHub
-CodeQL default setup immediately after the repository becomes public, or later
-add an advanced workflow pinned to a maintainer-verified full action SHA.
+`.github/codeql/codeql-config.yml` defines the intended analysis scope. No
+advanced CodeQL workflow was added because a trustworthy full commit SHA for
+`github/codeql-action` was not available in the offline authoring environment.
+Before release, either enable GitHub CodeQL default setup and record a
+successful analysis, or add an advanced workflow using a maintainer-verified
+full action SHA. A mutable reference such as `@v3` is not acceptable.

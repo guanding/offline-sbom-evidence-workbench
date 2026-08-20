@@ -1,5 +1,7 @@
-# Ding Guan (@guanding) is the project's sole maintainer. CODEOWNERS routes
-# review requests; it does not claim independent or four-eye approval.
+# Routing owner derived from the current repository history. The repository
+# administrator must verify this account has access before enabling protection.
+# A single CODEOWNER is not four-eye release approval; add a second independent
+# named reviewer before any public release.
 * @guanding
 /.github/ @guanding
 /src/ @guanding

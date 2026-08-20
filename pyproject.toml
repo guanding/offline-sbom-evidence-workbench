@@ -4,9 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "offline-sbom-evidence-workbench"
-version = "0.5.0-rc.1"
+version = "0.6.0-rc.1"
 description = "Offline, evidence-driven SBOM workbench"
-authors = [{ name = "Ding Guan" }]
 requires-python = ">=3.12,<3.13"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]
@@ -19,12 +18,6 @@ dependencies = [
   "pyshacl==0.40.1",
 ]
 
-[project.urls]
-Homepage = "https://github.com/guanding/offline-sbom-evidence-workbench"
-Repository = "https://github.com/guanding/offline-sbom-evidence-workbench"
-Issues = "https://github.com/guanding/offline-sbom-evidence-workbench/issues"
-Changelog = "https://github.com/guanding/offline-sbom-evidence-workbench/blob/main/CHANGELOG.md"
-
 [project.scripts]
 sbom-workbench = "sbom_workbench.cli:main"
 
@@ -36,7 +29,7 @@ include-package-data = false
 where = ["src"]
 
 [tool.setuptools.package-data]
-sbom_workbench = ["static/*.css", "static/*.html", "static/*.js"]
+sbom_workbench = ["static/*.css", "static/*.html", "static/*.js", "static/*.svg"]
 
 # Only project-owned schemas, registries, and synthetic fixtures are public
 # package data.  Rights-restricted vendor/specs is intentionally absent; an
@@ -44,7 +37,14 @@ sbom_workbench = ["static/*.css", "static/*.html", "static/*.js"]
 [tool.setuptools.data-files]
 "share/offline-sbom-evidence-workbench/release" = ["release/project_owned_assets.sha256", "release/rights_review.json"]
 "share/offline-sbom-evidence-workbench/schemas" = ["schemas/*.json"]
-"share/offline-sbom-evidence-workbench/datasets" = ["datasets/*.json"]
+"share/offline-sbom-evidence-workbench/datasets" = [
+  "datasets/m5_local_model_observations.json",
+  "datasets/model_runtime_intake.json",
+  "datasets/runtime_registry.json",
+  "datasets/source_registry.json",
+  "datasets/vex_issuer_allowlist.json",
+  "datasets/yocto_reference_profiles.json",
+]
 "share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/release-a" = ["fixtures/synthetic_orion/release-a/*.json"]
 "share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/release-a/artifacts" = ["fixtures/synthetic_orion/release-a/artifacts/*.tar"]
 "share/offline-sbom-evidence-workbench/fixtures/synthetic_orion/release-a/evidence" = ["fixtures/synthetic_orion/release-a/evidence/*.json"]

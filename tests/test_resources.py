@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import shutil
 import tempfile
@@ -11,7 +11,17 @@ import tomllib
 import unittest
 from unittest.mock import patch
 
-from release.build_public_candidate import _license_gate, _project_owned_asset_gate
+from release.build_public_candidate import (
+    INTERNAL_OBSERVATION_DATASETS,
+    _license_gate,
+    _project_owned_asset_gate,
+    _selected_paths,
+)
+from release.verify_public_candidate import (
+    CandidateVerificationError,
+    EXPECTED_BOUNDARY,
+    verify_candidate,
+)
 from sbom_workbench.resources import (
     DATA_ROOT_ENV,
     VENDOR_SPECS_ROOT_ENV,
@@ -79,22 +89,8 @@ class ResourceResolutionTests(unittest.TestCase):
             for item in review["items"]
             if item["id"] == "python-build-and-actions-dependencies"
         )
-        self.assertEqual(review["overall_status"], "APPROVED_WITH_EXCLUSIONS")
-        self.assertEqual(
-            review["review_model"]["mode"],
-            "SOLE_MAINTAINER_SELF_REVIEW",
-        )
-        self.assertFalse(review["review_model"]["independent_review_available"])
-        self.assertFalse(dependency_review["included"])
-        self.assertTrue(dependency_review["referenced"])
-        self.assertEqual(
-            dependency_review["status"],
-            "REFERENCED_NOT_DISTRIBUTED",
-        )
-        self.assertEqual(
-            review["artifact_distribution"]["wheel"],
-            "BLOCKED_NOT_OFFERED",
-        )
+        self.assertEqual(review["overall_status"], "PENDING_NAMED_REVIEW")
+        self.assertEqual(dependency_review["status"], "PENDING_LICENSE_REVIEW")
         with tempfile.TemporaryDirectory() as directory_name:
             candidate = Path(directory_name)
             for name in (
@@ -140,6 +136,91 @@ class ResourceResolutionTests(unittest.TestCase):
             self.assertIn("--require-hashes", workflow)
             self.assertIn("${RUNNER_TEMP}/ci-tools", workflow)
         self.assertIn('uv" lock --check', ci)
+        build_step = "- name: Build and scan the explicit public-source candidate"
+        public_test_step = (
+            "- name: Run public-source unit tests from the explicit candidate"
+        )
+        self.assertIn(build_step, ci)
+        self.assertIn(public_test_step, ci)
+        self.assertLess(ci.index(build_step), ci.index(public_test_step))
+        self.assertIn(
+            "working-directory: ${{ runner.temp }}/public-candidate",
+            ci,
+        )
+        self.assertIn(
+            "UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/public-candidate-venv",
+            ci,
+        )
+        self.assertIn('uv" sync --frozen --no-install-project', ci)
+        self.assertIn(
+            "PYTHONPATH: ${{ runner.temp }}/public-candidate/src:"
+            "${{ runner.temp }}/public-candidate",
+            ci,
+        )
+        self.assertEqual(ci.count("release/verify_public_candidate.py"), 2)
+        self.assertIn(
+            'expected_license_files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]',
+            security,
+        )
+
+    def test_public_candidate_manifest_verification_is_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory_name:
+            candidate = Path(directory_name)
+            payload = candidate / "payload.txt"
+            payload.write_text("controlled payload\n", encoding="utf-8")
+            status = candidate / "PUBLIC_RELEASE_STATUS.json"
+            status.write_text(
+                json.dumps(
+                    {
+                        "candidate_status": "BLOCKED_RELEASE_GATES",
+                        "release_eligible": False,
+                        "blocking_reasons": ["THIRD_PARTY_RIGHTS_PENDING"],
+                        "source_head": "0" * 40,
+                        "file_count_before_generated_metadata": 1,
+                        "boundary": EXPECTED_BOUNDARY,
+                    },
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            manifest = candidate / "PUBLIC_RELEASE_MANIFEST.sha256"
+
+            def write_manifest() -> None:
+                rows = [
+                    f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}"
+                    for path in (status, payload)
+                ]
+                manifest.write_text(
+                    "\n".join(sorted(rows, key=lambda row: row.split("  ", 1)[1]))
+                    + "\n",
+                    encoding="utf-8",
+                )
+
+            write_manifest()
+            summary = verify_candidate(candidate)
+            self.assertEqual(summary["verified_file_count"], 2)
+            self.assertFalse(summary["release_eligible"])
+
+            payload.write_text("tampered\n", encoding="utf-8")
+            with self.assertRaisesRegex(CandidateVerificationError, "hash mismatch"):
+                verify_candidate(candidate)
+            payload.write_text("controlled payload\n", encoding="utf-8")
+            (candidate / "unexpected.txt").write_text("extra\n", encoding="utf-8")
+            with self.assertRaisesRegex(CandidateVerificationError, "exact set mismatch"):
+                verify_candidate(candidate)
+            (candidate / "unexpected.txt").unlink()
+
+            status_payload = status.read_text(encoding="utf-8").lstrip()
+            status.write_text(
+                '{"boundary": "NOT_CUSTOMER_EVIDENCE_NOT_CONFORMITY_NOT_RELEASE_APPROVAL",'
+                + status_payload[1:],
+                encoding="utf-8",
+            )
+            write_manifest()
+            with self.assertRaisesRegex(CandidateVerificationError, "duplicate JSON key"):
+                verify_candidate(candidate)
 
     def test_project_owned_asset_manifest_is_exact_and_fail_closed(self) -> None:
         project_root = Path(__file__).resolve().parents[1]
@@ -169,6 +250,48 @@ class ResourceResolutionTests(unittest.TestCase):
                 _project_owned_asset_gate(candidate),
                 (False, "OWNED_ASSET_SET_MISMATCH"),
             )
+
+    def test_internal_observation_datasets_are_excluded_from_public_artifacts(self) -> None:
+        project_root = Path(__file__).resolve().parents[1]
+        present = {
+            relative
+            for relative in INTERNAL_OBSERVATION_DATASETS
+            if (project_root / relative).is_file()
+        }
+        self.assertIn(
+            len(present),
+            {0, len(INTERNAL_OBSERVATION_DATASETS)},
+            "internal observation datasets must be entirely present in a developer "
+            "checkout or entirely absent from a public candidate",
+        )
+        if present:
+            self.assertTrue(present.isdisjoint(_selected_paths()))
+        else:
+            public_manifest = project_root / "PUBLIC_RELEASE_MANIFEST.sha256"
+            self.assertTrue(public_manifest.is_file())
+            public_paths = {
+                PurePosixPath(line.split("  ", 1)[1])
+                for line in public_manifest.read_text(encoding="utf-8").splitlines()
+                if "  " in line
+            }
+            self.assertTrue(
+                set(INTERNAL_OBSERVATION_DATASETS).isdisjoint(public_paths)
+            )
+
+        metadata = tomllib.loads((project_root / "pyproject.toml").read_text(encoding="utf-8"))
+        packaged = set(
+            metadata["tool"]["setuptools"]["data-files"][
+                "share/offline-sbom-evidence-workbench/datasets"
+            ]
+        )
+        approved = {
+            relative
+            for line in (project_root / "release/project_owned_assets.sha256")
+            .read_text(encoding="utf-8")
+            .splitlines()
+            if (relative := line.split("  ", 1)[1]).startswith("datasets/")
+        }
+        self.assertEqual(packaged, approved)
 
     def test_resource_path_rejects_traversal(self) -> None:
         with self.assertRaisesRegex(ResourceError, "unsafe workbench resource path"):

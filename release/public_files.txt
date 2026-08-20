@@ -20,6 +20,11 @@ requirements-ci.lock
 requirements-ci.txt
 uv.lock
 datasets/
+!datasets/github_component_population_matrix_20260820.json
+!datasets/github_source_matrix_20260820.json
+!datasets/qwen38_aggressive_capacity_probe_20260820_r7.json
+!datasets/qwen38_aggressive_evaluation_20260820_r8.json
+!datasets/qwen38_aggressive_observation_20260820.json
 docs/USER_GUIDE.md
 docs/SYNTHETIC_MVP_ACCEPTANCE.md
 fixtures/synthetic_orion/

@@ -81,6 +81,98 @@ def build_exact_set_manifest(root: Path, root_id: str) -> dict[str, Any]:
     }
 
 
+def build_bounded_exact_set_manifest(
+    root: Path,
+    root_id: str,
+    *,
+    max_files: int,
+    max_total_bytes: int,
+    max_single_file_bytes: int,
+    max_depth: int,
+) -> dict[str, Any]:
+    """Build an exact-set while enforcing source-tree resource budgets.
+
+    The limits are checked before each file is hashed.  This prevents an
+    untrusted repository from turning a source-only scan into an unbounded
+    filesystem walk or byte-read operation.  The resulting manifest is byte
+    compatible with :func:`build_exact_set_manifest` when the tree is within
+    budget.
+    """
+
+    limits = {
+        "max_files": max_files,
+        "max_total_bytes": max_total_bytes,
+        "max_single_file_bytes": max_single_file_bytes,
+        "max_depth": max_depth,
+    }
+    if any(type(value) is not int or value <= 0 for value in limits.values()):
+        raise ManifestError("source manifest resource budgets must be positive integers")
+    if max_single_file_bytes > max_total_bytes:
+        raise ManifestError("single-file budget must not exceed total-byte budget")
+    if root.is_symlink():
+        raise ManifestError("manifest root must not be a symlink")
+    root = root.resolve(strict=True)
+    if not root.is_dir():
+        raise ManifestError("manifest root must be a directory")
+
+    entries: list[dict[str, Any]] = []
+    total_bytes = 0
+
+    def fail_on_walk_error(error: OSError) -> None:
+        raise ManifestError(f"cannot enumerate evidence root: {error}") from error
+
+    for current, directories, files in os.walk(
+        root, topdown=True, followlinks=False, onerror=fail_on_walk_error
+    ):
+        current_path = Path(current)
+        relative_directory = current_path.relative_to(root)
+        directory_depth = 0 if relative_directory == Path(".") else len(relative_directory.parts)
+        if directory_depth > max_depth:
+            raise ManifestError("source tree exceeds max_depth resource budget")
+        for directory in list(directories):
+            candidate = current_path / directory
+            if candidate.is_symlink():
+                raise ManifestError(f"symlink directory is forbidden: {candidate.relative_to(root)}")
+        for filename in files:
+            candidate = current_path / filename
+            relative = candidate.relative_to(root)
+            if len(relative.parts) > max_depth:
+                raise ManifestError("source tree exceeds max_depth resource budget")
+            info = candidate.lstat()
+            if not stat.S_ISREG(info.st_mode):
+                raise ManifestError(f"non-regular file is forbidden: {relative.as_posix()}")
+            if info.st_nlink != 1:
+                raise ManifestError(f"hard-linked file is forbidden: {relative.as_posix()}")
+            size = info.st_size
+            if size > max_single_file_bytes:
+                raise ManifestError(
+                    f"source file exceeds max_single_file_bytes resource budget: {relative.as_posix()}"
+                )
+            if len(entries) + 1 > max_files:
+                raise ManifestError("source tree exceeds max_files resource budget")
+            if total_bytes + size > max_total_bytes:
+                raise ManifestError("source tree exceeds max_total_bytes resource budget")
+            total_bytes += size
+            entries.append(
+                {
+                    "relative_path": relative.as_posix(),
+                    "sha256": sha256_file(candidate),
+                    "size": size,
+                    "executable": bool(info.st_mode & stat.S_IXUSR),
+                }
+            )
+    entries.sort(key=lambda item: item["relative_path"].encode("utf-8"))
+    identity = {"root_id": root_id, "files": entries}
+    return {
+        "schema_version": "1.0",
+        "root_id": root_id,
+        "file_count": len(entries),
+        "total_bytes": total_bytes,
+        "exact_set_sha256": hashlib.sha256(canonical_json_bytes(identity)).hexdigest(),
+        "files": entries,
+    }
+
+
 def write_json_atomic(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp")
