@@ -979,6 +979,10 @@ class CliM3M6Tests(unittest.TestCase):
         stdout = io.StringIO()
         with (
             patch.multiple("sbom_workbench.cli", **anchors),
+            patch(
+                "sbom_workbench.cli.TRUSTED_SANDBOX_EXEC",
+                self.syft.resolve(),
+            ),
             patch("sbom_workbench.cli.subprocess.run") as run,
             contextlib.redirect_stdout(stdout),
         ):
