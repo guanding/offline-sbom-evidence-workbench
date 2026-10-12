@@ -138,7 +138,7 @@ jobs:
           print("Metadata inventory is not a license compatibility or redistribution approval.")
           PY
       - name: Upload dependency metadata and locked set
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dependency-license-metadata
           path: |
@@ -188,7 +188,7 @@ jobs:
           git ls-files -z | python -c 'import sys; print("".join(line + "\n" for line in sys.stdin.buffer.read().decode().split("\0") if line.endswith((".docx", ".pdf", ".png", ".xlsx", ".tar"))))' > "${{ runner.temp }}/surface-reports/tracked-binary-files.txt"
           git ls-files 'evidence/**' 'datasets/**' 'vendor/**' > "${{ runner.temp }}/surface-reports/tracked-governed-material.txt"
       - name: Upload release-surface inventory
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: tracked-release-surface
           path: ${{ runner.temp }}/surface-reports/*
