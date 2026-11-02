@@ -16,7 +16,7 @@ classifiers = [
 ]
 dependencies = [
   "jsonschema==4.26.0",
-  "pyshacl==0.40.1",
+  "pyshacl==0.40.2",
 ]
 
 [project.urls]
